@@ -1,0 +1,6 @@
+{
+  "name": "OrderFlow - Kitchen & Order Tracking",
+  "description": "Clean and light order dispatch and tracking system with initialed cards, order numbering, and a 3-stage kitchen workflow (Queue, Oven, Delivered).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
