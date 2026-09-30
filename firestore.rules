@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for Orders
+    function isValidOrder(data) {
+      return data.keys().hasAll(['id', 'buzzerNumber', 'stage', 'queuedAt', 'items'])
+        && data.id is string && data.id.size() <= 128
+        && data.buzzerNumber is string && data.buzzerNumber.size() <= 32
+        && (data.stage == 'queue' || data.stage == 'oven' || data.stage == 'delivered')
+        && data.queuedAt is number
+        && data.items is list && data.items.size() <= 100;
+    }
+
+    // Validation for Cards
+    function isValidCard(data) {
+      return data.keys().hasAll(['id', 'name', 'initials', 'category'])
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() <= 128
+        && data.initials is string && data.initials.size() <= 10
+        && data.category is string && data.category.size() <= 64;
+    }
+
+    // Validation for Categories
+    function isValidCategory(data) {
+      return data.keys().hasAll(['id', 'name'])
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() <= 64;
+    }
+
+    // Orders collection: open kitchen workspace for real-time order dispatch & tracking
+    match /orders/{orderId} {
+      allow read: if true;
+      allow create: if isValidId(orderId) && isValidOrder(incoming());
+      allow update: if isValidId(orderId) && isValidOrder(incoming());
+      allow delete: if isValidId(orderId);
+    }
+
+    // Menu Cards collection: open kitchen workspace for real-time menu synchronization
+    match /cards/{cardId} {
+      allow read: if true;
+      allow create: if isValidId(cardId) && isValidCard(incoming());
+      allow update: if isValidId(cardId) && isValidCard(incoming());
+      allow delete: if isValidId(cardId);
+    }
+
+    // Categories collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow create: if isValidId(categoryId) && isValidCategory(incoming());
+      allow update: if isValidId(categoryId) && isValidCategory(incoming());
+      allow delete: if isValidId(categoryId);
+    }
+
+    // Default deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

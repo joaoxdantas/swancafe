@@ -1,0 +1,6 @@
+{
+  "summary": "Architecture and implementation plan to enable real-time multi-device cloud synchronization for OrderFlow via Firebase Firestore. Includes live real-time listeners for orders and menu cards, open instant-sync device connectivity, and zero-configuration Vercel deployment compatibility.",
+  "updatedAt": "2026-09-30T08:13:02.294373517Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

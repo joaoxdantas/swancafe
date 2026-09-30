@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Order",
+      "description": "A live kitchen order associated with a buzzer number and tracked across Queue, Oven, and Delivered stages.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "buzzerNumber": { "type": "string", "maxLength": 32 },
+        "stage": { "type": "string", "enum": ["queue", "oven", "delivered"] },
+        "notes": { "type": "string", "maxLength": 500 },
+        "queuedAt": { "type": "number" },
+        "ovenAt": { "type": "number" },
+        "deliveredAt": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "items": { "type": "array" }
+      },
+      "required": ["id", "buzzerNumber", "stage", "queuedAt", "items"]
+    },
+    "CardItem": {
+      "title": "CardItem",
+      "description": "A selectable pizza or food item card with initials and color branding.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "initials": { "type": "string", "maxLength": 10 },
+        "category": { "type": "string", "maxLength": 64 },
+        "isActive": { "type": "boolean" },
+        "colorScheme": { "type": "object" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "name", "initials", "category"]
+    },
+    "CategoryItem": {
+      "title": "CategoryItem",
+      "description": "A category for grouping menu cards.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "name"]
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Collection of all live kitchen orders"
+    },
+    "/cards/{cardId}": {
+      "schema": "CardItem",
+      "description": "Collection of available menu cards"
+    },
+    "/categories/{categoryId}": {
+      "schema": "CategoryItem",
+      "description": "Collection of menu categories"
+    }
+  }
+}

@@ -8,6 +8,22 @@ import { MenuEditTab } from './components/MenuEditTab';
 import { CardEditModal } from './components/CardEditModal';
 import { OrderComposer } from './components/OrderComposer';
 import { Check, Layers, Activity, SlidersHorizontal } from 'lucide-react';
+import {
+  testConnection,
+  subscribeOrders,
+  subscribeCards,
+  subscribeCategories,
+  syncSaveOrder,
+  syncUpdateOrderStatus,
+  syncDeleteOrder,
+  syncClearDeliveredOrders,
+  syncSaveCard,
+  syncDeleteCard,
+  syncAddCategory,
+  syncRenameCategory,
+  syncDeleteCategory,
+  seedInitialCloudDataIfEmpty,
+} from './firebase';
 
 const STORAGE_KEY_CARDS = 'orderflow_cards_v4';
 const STORAGE_KEY_ORDERS = 'orderflow_orders_v4';
@@ -250,6 +266,53 @@ export default function App() {
     }
   }, [buzzerNumber]);
 
+  // Real-time Cloud Synchronization (Firebase Firestore onSnapshot)
+  useEffect(() => {
+    testConnection();
+    // Seed initial data if cloud is empty so any new device gets the full pizza menu
+    seedInitialCloudDataIfEmpty(INITIAL_CARDS, DEFAULT_CATEGORIES, orders);
+
+    let isInitialLoad = true;
+    const unsubOrders = subscribeOrders((cloudOrders) => {
+      if (!isInitialLoad) {
+        setOrders((prev) => {
+          const prevMap = new Map(prev.map((o) => [o.id, o]));
+          // Check if a brand-new order arrived in Queue from another device
+          const hasNewIncoming = cloudOrders.some(
+            (o) => !prevMap.has(o.id) && o.stage === 'queue'
+          );
+          if (hasNewIncoming) {
+            sounds.playBell();
+          }
+          return cloudOrders;
+        });
+      } else {
+        isInitialLoad = false;
+        if (cloudOrders.length > 0) {
+          setOrders(cloudOrders);
+        }
+      }
+    });
+
+    const unsubCards = subscribeCards((cloudCards) => {
+      if (cloudCards.length > 0) {
+        setCards(cloudCards);
+      }
+    });
+
+    const unsubCategories = subscribeCategories((cloudCategories) => {
+      if (cloudCategories.length > 0) {
+        setCategories(cloudCategories);
+      }
+    });
+
+    return () => {
+      unsubOrders();
+      unsubCards();
+      unsubCategories();
+    };
+  }, []);
+
   // Click card in grid -> adds item to active Buzzer draft order!
   const handleSelectCard = (card: CardItem) => {
     if (card.isActive === false) return;
@@ -322,6 +385,7 @@ export default function App() {
     };
 
     setOrders((prev) => [newOrder, ...prev]);
+    syncSaveOrder(newOrder);
     setDraftItems([]);
 
     // Advance buzzer number
@@ -350,6 +414,7 @@ export default function App() {
     const trimmed = newCat.trim();
     if (!trimmed || categories.includes(trimmed)) return;
     setCategories((prev) => [...prev, trimmed]);
+    syncAddCategory(trimmed);
     setToastMessage({ text: `Category "${trimmed}" created.` });
     setTimeout(() => setToastMessage(null), 3000);
   };
@@ -367,6 +432,8 @@ export default function App() {
     setCards((prev) =>
       prev.map((c) => (c.category === oldName ? { ...c, category: trimmed } : c))
     );
+
+    syncRenameCategory(oldName, trimmed, cards);
 
     // If currently filtered by old category, update filter
     if (selectedCategory === oldName) {
@@ -389,6 +456,8 @@ export default function App() {
       )
     );
 
+    syncDeleteCategory(catName, cards);
+
     if (selectedCategory === catName) {
       setSelectedCategory('All');
     }
@@ -403,13 +472,15 @@ export default function App() {
       prev.map((c) => {
         if (c.id !== cardId) return c;
         const newStatus = !(c.isActive !== false);
+        const updated = { ...c, isActive: newStatus };
+        syncSaveCard(updated);
         setToastMessage({
           text: newStatus
             ? `Turned ON: "${c.name}" is now available in Cards tab.`
             : `Turned OFF: "${c.name}" hidden from Cards tab (saved for reuse).`,
         });
         setTimeout(() => setToastMessage(null), 3500);
-        return { ...c, isActive: newStatus };
+        return updated;
       })
     );
   };
@@ -424,6 +495,7 @@ export default function App() {
       createdAt: Date.now(),
     };
     setCards((prev) => [newCard, ...prev]);
+    syncSaveCard(newCard);
     setToastMessage({ text: `Duplicated "${card.name}".` });
     setTimeout(() => setToastMessage(null), 3000);
   };
@@ -457,9 +529,16 @@ export default function App() {
   // Handle Save (Add or Update) Card
   const handleSaveCard = (cardData: Omit<CardItem, 'id' | 'createdAt'> & { id?: string }) => {
     if (cardData.id) {
+      const existing = cards.find((c) => c.id === cardData.id);
+      const updatedCard: CardItem = {
+        ...cardData,
+        id: cardData.id,
+        createdAt: existing?.createdAt || Date.now(),
+      };
       setCards((prev) =>
-        prev.map((c) => (c.id === cardData.id ? { ...c, ...cardData } : c))
+        prev.map((c) => (c.id === cardData.id ? updatedCard : c))
       );
+      syncSaveCard(updatedCard);
       setToastMessage({
         text: `Updated card "${cardData.name}" [${cardData.initials}]`,
       });
@@ -470,6 +549,7 @@ export default function App() {
         createdAt: Date.now(),
       };
       setCards((prev) => [newCard, ...prev]);
+      syncSaveCard(newCard);
       setToastMessage({
         text: `Added card "${newCard.name}" [${newCard.initials}]`,
       });
@@ -481,6 +561,7 @@ export default function App() {
   const handleDeleteCard = (cardId: string) => {
     setCards((prev) => prev.filter((c) => c.id !== cardId));
     setDraftItems((prev) => prev.filter((it) => it.cardId !== cardId));
+    syncDeleteCard(cardId);
     setToastMessage({ text: 'Card removed successfully.' });
     setTimeout(() => setToastMessage(null), 3000);
   };
@@ -488,30 +569,36 @@ export default function App() {
   // Update Order Stage (Queue -> Oven -> Delivered)
   const handleUpdateStage = (orderId: string, newStage: OrderStage) => {
     const now = Date.now();
+    const additionalTimestamps: { ovenAt?: number; deliveredAt?: number } = {};
+    if (newStage === 'oven') {
+      additionalTimestamps.ovenAt = now;
+    } else if (newStage === 'delivered') {
+      additionalTimestamps.deliveredAt = now;
+    }
+
     setOrders((prev) =>
       prev.map((order) => {
         if (order.id !== orderId) return order;
-        const updated = { ...order, stage: newStage };
-        if (newStage === 'oven' && !order.ovenAt) {
-          updated.ovenAt = now;
-        } else if (newStage === 'delivered' && !order.deliveredAt) {
-          updated.deliveredAt = now;
-        }
+        const updated = { ...order, stage: newStage, ...additionalTimestamps };
         return updated;
       })
     );
+    syncUpdateOrderStatus(orderId, newStage, additionalTimestamps);
   };
 
   // Remove individual order
   const handleRemoveOrder = (orderId: string) => {
     sounds.playPop();
     setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    syncDeleteOrder(orderId);
   };
 
   // Clear all delivered
   const handleClearDelivered = () => {
     sounds.playPop();
+    const deliveredIds = orders.filter((o) => o.stage === 'delivered').map((o) => o.id);
     setOrders((prev) => prev.filter((o) => o.stage !== 'delivered'));
+    syncClearDeliveredOrders(deliveredIds);
   };
 
   // Quick Demo / Test Order
@@ -554,6 +641,7 @@ export default function App() {
     };
 
     setOrders((prev) => [newOrder, ...prev]);
+    syncSaveOrder(newOrder);
 
     const parsed = parseInt(cleanBuzzer, 10);
     if (!isNaN(parsed)) {
