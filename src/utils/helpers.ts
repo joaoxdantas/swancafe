@@ -1,63 +1,163 @@
 import { CardItem } from '../types';
 
-export const COLOR_PALETTES = [
+export interface CategoryColorOption {
+  id: string;
+  name: string;
+  hex: string;
+  border: string;       // Outline border for all cards in this category
+  ring: string;         // Ring focus/selection
+  bg: string;           // Soft tint
+  text: string;         // Text color
+  badge: string;        // Badge styling
+  pillBg: string;       // Solid color
+}
+
+export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   {
-    bg: 'bg-orange-50/60',
-    border: 'border-orange-200',
-    text: 'text-orange-700',
-    badge: 'bg-orange-100 text-orange-800',
+    id: 'orange',
+    name: 'Laranja (Pizza)',
+    hex: '#f97316',
+    border: 'border-orange-500 dark:border-orange-500',
+    ring: 'ring-orange-500/60',
+    bg: 'bg-orange-50/80 dark:bg-orange-950/30',
+    text: 'text-orange-600 dark:text-orange-400',
+    badge: 'bg-orange-100 text-orange-800 dark:bg-orange-950/70 dark:text-orange-300',
     pillBg: 'bg-orange-500',
   },
   {
-    bg: 'bg-amber-50/60',
-    border: 'border-amber-200',
-    text: 'text-amber-700',
-    badge: 'bg-amber-100 text-amber-800',
-    pillBg: 'bg-amber-500',
-  },
-  {
-    bg: 'bg-emerald-50/60',
-    border: 'border-emerald-200',
-    text: 'text-emerald-700',
-    badge: 'bg-emerald-100 text-emerald-800',
+    id: 'emerald',
+    name: 'Verde (Salada)',
+    hex: '#10b981',
+    border: 'border-emerald-500 dark:border-emerald-400',
+    ring: 'ring-emerald-500/60',
+    bg: 'bg-emerald-50/80 dark:bg-emerald-950/30',
+    text: 'text-emerald-600 dark:text-emerald-400',
+    badge: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300',
     pillBg: 'bg-emerald-500',
   },
   {
-    bg: 'bg-sky-50/60',
-    border: 'border-sky-200',
-    text: 'text-sky-700',
-    badge: 'bg-sky-100 text-sky-800',
+    id: 'amber',
+    name: 'Amarelo / Âmbar',
+    hex: '#f59e0b',
+    border: 'border-amber-500 dark:border-amber-400',
+    ring: 'ring-amber-500/60',
+    bg: 'bg-amber-50/80 dark:bg-amber-950/30',
+    text: 'text-amber-600 dark:text-amber-400',
+    badge: 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300',
+    pillBg: 'bg-amber-500',
+  },
+  {
+    id: 'sky',
+    name: 'Azul (Bebidas)',
+    hex: '#0ea5e9',
+    border: 'border-sky-500 dark:border-sky-400',
+    ring: 'ring-sky-500/60',
+    bg: 'bg-sky-50/80 dark:bg-sky-950/30',
+    text: 'text-sky-600 dark:text-sky-400',
+    badge: 'bg-sky-100 text-sky-800 dark:bg-sky-950/70 dark:text-sky-300',
     pillBg: 'bg-sky-500',
   },
   {
-    bg: 'bg-indigo-50/60',
-    border: 'border-indigo-200',
-    text: 'text-indigo-700',
-    badge: 'bg-indigo-100 text-indigo-800',
+    id: 'indigo',
+    name: 'Índigo (Massas)',
+    hex: '#6366f1',
+    border: 'border-indigo-500 dark:border-indigo-400',
+    ring: 'ring-indigo-500/60',
+    bg: 'bg-indigo-50/80 dark:bg-indigo-950/30',
+    text: 'text-indigo-600 dark:text-indigo-400',
+    badge: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300',
     pillBg: 'bg-indigo-500',
   },
   {
-    bg: 'bg-rose-50/60',
-    border: 'border-rose-200',
-    text: 'text-rose-700',
-    badge: 'bg-rose-100 text-rose-800',
+    id: 'rose',
+    name: 'Vermelho / Rosa',
+    hex: '#f43f5e',
+    border: 'border-rose-500 dark:border-rose-400',
+    ring: 'ring-rose-500/60',
+    bg: 'bg-rose-50/80 dark:bg-rose-950/30',
+    text: 'text-rose-600 dark:text-rose-400',
+    badge: 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300',
     pillBg: 'bg-rose-500',
   },
   {
-    bg: 'bg-violet-50/60',
-    border: 'border-violet-200',
-    text: 'text-violet-700',
-    badge: 'bg-violet-100 text-violet-800',
+    id: 'violet',
+    name: 'Roxo / Sobremesa',
+    hex: '#8b5cf6',
+    border: 'border-violet-500 dark:border-violet-400',
+    ring: 'ring-violet-500/60',
+    bg: 'bg-violet-50/80 dark:bg-violet-950/30',
+    text: 'text-violet-600 dark:text-violet-400',
+    badge: 'bg-violet-100 text-violet-800 dark:bg-violet-950/70 dark:text-violet-300',
     pillBg: 'bg-violet-500',
   },
   {
-    bg: 'bg-teal-50/60',
-    border: 'border-teal-200',
-    text: 'text-teal-700',
-    badge: 'bg-teal-100 text-teal-800',
+    id: 'teal',
+    name: 'Verde-Água',
+    hex: '#14b8a6',
+    border: 'border-teal-500 dark:border-teal-400',
+    ring: 'ring-teal-500/60',
+    bg: 'bg-teal-50/80 dark:bg-teal-950/30',
+    text: 'text-teal-600 dark:text-teal-400',
+    badge: 'bg-teal-100 text-teal-800 dark:bg-teal-950/70 dark:text-teal-300',
     pillBg: 'bg-teal-500',
   },
 ];
+
+export const DEFAULT_CATEGORY_COLORS: Record<string, string> = {
+  Pizza: 'orange',
+  Salad: 'emerald', // Green for salad!
+  Sides: 'amber',
+  Pasta: 'indigo',
+  Drinks: 'sky',
+  Dessert: 'violet',
+  Special: 'rose',
+};
+
+export function getCategoryColorScheme(
+  categoryName?: string,
+  categoryColors?: Record<string, string>
+): CategoryColorOption {
+  if (!categoryName) return CATEGORY_COLOR_OPTIONS[0];
+
+  const colorId = categoryColors?.[categoryName];
+  if (colorId) {
+    const found = CATEGORY_COLOR_OPTIONS.find((c) => c.id === colorId);
+    if (found) return found;
+  }
+
+  // Fallback smart defaults
+  const lower = categoryName.toLowerCase();
+  if (lower.includes('salad') || lower.includes('verde') || lower.includes('green') || lower.includes('salada')) {
+    return CATEGORY_COLOR_OPTIONS[1]; // emerald / green
+  }
+  if (lower.includes('pizza') || lower.includes('burger')) {
+    return CATEGORY_COLOR_OPTIONS[0]; // orange
+  }
+  if (lower.includes('drink') || lower.includes('bebida') || lower.includes('suco') || lower.includes('refrigerante')) {
+    return CATEGORY_COLOR_OPTIONS[3]; // sky
+  }
+  if (lower.includes('pasta') || lower.includes('massa')) {
+    return CATEGORY_COLOR_OPTIONS[4]; // indigo
+  }
+  if (lower.includes('side') || lower.includes('porç') || lower.includes('focaccia') || lower.includes('entrada')) {
+    return CATEGORY_COLOR_OPTIONS[2]; // amber
+  }
+  if (lower.includes('dessert') || lower.includes('doce') || lower.includes('sobremesa')) {
+    return CATEGORY_COLOR_OPTIONS[6]; // violet
+  }
+  if (lower.includes('special') || lower.includes('promo') || lower.includes('chef')) {
+    return CATEGORY_COLOR_OPTIONS[5]; // rose
+  }
+
+  let hash = 0;
+  for (let i = 0; i < categoryName.length; i++) {
+    hash = categoryName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % CATEGORY_COLOR_OPTIONS.length;
+  return CATEGORY_COLOR_OPTIONS[index];
+}
+
+export const COLOR_PALETTES = CATEGORY_COLOR_OPTIONS;
 
 export function getInitials(name: string): string {
   if (!name || !name.trim()) return '????';

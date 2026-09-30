@@ -241,26 +241,31 @@ export async function syncDeleteCard(cardId: string) {
 // ===============================================
 
 export function subscribeCategories(
-  onData: (categories: string[]) => void,
+  onData: (categories: string[], categoryColors: Record<string, string>) => void,
   onError?: (err: unknown) => void
 ) {
   const path = 'categories';
   return onSnapshot(
     collection(db, path),
     (snapshot) => {
-      const catList: { id: string; name: string; createdAt: number }[] = [];
+      const catList: { id: string; name: string; color?: string; createdAt: number }[] = [];
+      const colorsMap: Record<string, string> = {};
       snapshot.forEach((d) => {
         const data = d.data();
         if (data.name) {
           catList.push({
             id: d.id,
             name: data.name,
+            color: data.color,
             createdAt: data.createdAt || 0,
           });
+          if (data.color) {
+            colorsMap[data.name] = data.color;
+          }
         }
       });
       catList.sort((a, b) => a.createdAt - b.createdAt);
-      onData(catList.map((c) => c.name));
+      onData(catList.map((c) => c.name), colorsMap);
     },
     (err) => {
       if (onError) onError(err);
@@ -269,7 +274,7 @@ export function subscribeCategories(
   );
 }
 
-export async function syncAddCategory(name: string) {
+export async function syncAddCategory(name: string, color?: string) {
   const trimmed = name.trim();
   if (!trimmed) return;
   const id = `cat-${trimmed.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
@@ -278,6 +283,7 @@ export async function syncAddCategory(name: string) {
     await setDoc(doc(db, 'categories', id), {
       id,
       name: trimmed,
+      color: color || 'orange',
       createdAt: Date.now(),
     });
   } catch (err) {
@@ -285,10 +291,25 @@ export async function syncAddCategory(name: string) {
   }
 }
 
+export async function syncUpdateCategoryColor(name: string, color: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  const id = `cat-${trimmed.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+  const path = `categories/${id}`;
+  try {
+    await updateDoc(doc(db, 'categories', id), {
+      color,
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, path);
+  }
+}
+
 export async function syncRenameCategory(
   oldName: string,
   newName: string,
-  cardsToUpdate: CardItem[]
+  cardsToUpdate: CardItem[],
+  color?: string
 ) {
   const trimmedNew = newName.trim();
   if (!trimmedNew || trimmedNew === oldName) return;
@@ -301,6 +322,7 @@ export async function syncRenameCategory(
     batch.set(doc(db, 'categories', newId), {
       id: newId,
       name: trimmedNew,
+      ...(color ? { color } : {}),
       createdAt: Date.now(),
     });
 
@@ -341,7 +363,8 @@ export async function syncDeleteCategory(
 export async function seedInitialCloudDataIfEmpty(
   initialCards: CardItem[],
   initialCategories: string[],
-  initialOrders: OrderItem[]
+  initialOrders: OrderItem[],
+  initialCategoryColors?: Record<string, string>
 ) {
   try {
     const cardsSnap = await getDocs(collection(db, 'cards'));
@@ -352,9 +375,11 @@ export async function seedInitialCloudDataIfEmpty(
       // Seed categories
       initialCategories.forEach((catName, idx) => {
         const id = `cat-${catName.toLowerCase().replace(/[^a-z0-9]/g, '-')}`;
+        const color = (initialCategoryColors && initialCategoryColors[catName]) || (catName.toLowerCase().includes('salad') ? 'emerald' : 'orange');
         batch.set(doc(db, 'categories', id), {
           id,
           name: catName,
+          color,
           createdAt: Date.now() + idx,
         });
       });

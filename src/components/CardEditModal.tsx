@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { CardItem } from '../types';
 import { X, Sparkles, Trash2, Edit3, Plus, Tag } from 'lucide-react';
-import { getInitials, COLOR_PALETTES, sounds } from '../utils/helpers';
+import { getInitials, getCategoryColorScheme, sounds } from '../utils/helpers';
 
 interface CardEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   cardToEdit: CardItem | null; // null means adding a new card
   categories: string[];
+  categoryColors?: Record<string, string>;
   onSaveCard: (cardData: Omit<CardItem, 'id' | 'createdAt'> & { id?: string }) => void;
   onDeleteCard?: (id: string) => void;
-  onAddNewCategory?: (newCat: string) => void;
+  onAddNewCategory?: (newCat: string, color?: string) => void;
 }
 
 export const CardEditModal: React.FC<CardEditModalProps> = ({
@@ -18,6 +19,7 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
   onClose,
   cardToEdit,
   categories,
+  categoryColors,
   onSaveCard,
   onDeleteCard,
   onAddNewCategory,
@@ -30,7 +32,6 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
   const [customInitials, setCustomInitials] = useState('');
   const [category, setCategory] = useState(safeCategories[0] || 'General');
   const [isActive, setIsActive] = useState(true);
-  const [selectedPaletteIdx, setSelectedPaletteIdx] = useState(0);
   const [newCatInput, setNewCatInput] = useState('');
   const [isAddingNewCat, setIsAddingNewCat] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -42,17 +43,11 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
         setCustomInitials(cardToEdit.initials || '');
         setCategory(cardToEdit.category || safeCategories[0] || 'General');
         setIsActive(cardToEdit.isActive !== false);
-        const targetColor = cardToEdit.colorScheme?.text;
-        const matchIdx = targetColor
-          ? COLOR_PALETTES.findIndex((p) => p && p.text === targetColor)
-          : -1;
-        setSelectedPaletteIdx(matchIdx !== -1 ? matchIdx : 0);
       } else {
         setName('');
         setCustomInitials('');
         setCategory(safeCategories[0] || 'General');
         setIsActive(true);
-        setSelectedPaletteIdx(0);
       }
       setIsAddingNewCat(false);
       setNewCatInput('');
@@ -66,15 +61,8 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
     (customInitials || '').trim() || getInitials(name || 'ITEM')
   ).toUpperCase();
 
-  const activePalette =
-    COLOR_PALETTES[selectedPaletteIdx] ||
-    COLOR_PALETTES[0] || {
-      bg: 'bg-orange-50/60',
-      border: 'border-orange-200',
-      text: 'text-orange-700',
-      badge: 'bg-orange-100 text-orange-800',
-      pillBg: 'bg-orange-500',
-    };
+  // The card's color scheme is strictly determined by its group/category
+  const activePalette = getCategoryColorScheme(category, categoryColors);
 
   const handleCreateCategory = () => {
     if (!newCatInput.trim()) return;
@@ -121,64 +109,69 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
       <div
-        className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden transform transition-all"
+        className="w-full max-w-md bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-3">
           <div className="flex items-center gap-2">
             <div
               className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                 isEditing
-                  ? 'bg-indigo-100 text-indigo-700'
-                  : 'bg-orange-100 text-orange-700'
+                  ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                  : 'bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300'
               }`}
             >
               {isEditing ? <Edit3 className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
             </div>
-            <h3 className="text-base font-semibold text-slate-900">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {isEditing ? 'Edit Card' : 'Add New Card'}
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Live Card Preview */}
-        <div className="px-6 py-3 bg-slate-50 border-y border-slate-200/80">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span>Card Preview (Big Initials + Small Name)</span>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-              isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
-            }`}>
-              {isActive ? 'Active in Menu' : 'Turned Off (Saved for reuse)'}
+        <div className="px-6 py-3.5 bg-slate-50 dark:bg-slate-850 border-y border-slate-200/80 dark:border-slate-700">
+          <div className="text-[11px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+            <span>Pré-visualização do Card</span>
+            <span
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                isActive
+                  ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                  : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+              }`}
+            >
+              {isActive ? 'Ativo no Menu' : 'Desativado'}
             </span>
           </div>
 
           <div
-            className={`relative p-5 rounded-2xl border ${activePalette.border} bg-white shadow-2xs overflow-hidden flex flex-col justify-between min-h-[145px] ${
+            className={`relative p-5 rounded-2xl border-2 ${activePalette.border} bg-white dark:bg-slate-800 shadow-sm overflow-hidden flex flex-col justify-between min-h-[145px] ${
               !isActive ? 'opacity-60 grayscale-30' : ''
             }`}
           >
+            {/* Soft decorative background tint */}
             <div
-              className={`absolute -top-8 -right-8 w-24 h-24 rounded-full ${activePalette.bg} opacity-70 pointer-events-none`}
+              className={`absolute -top-8 -right-8 w-24 h-24 rounded-full ${activePalette.bg} opacity-70 dark:opacity-30 pointer-events-none`}
             />
 
-            <div className="flex items-center justify-between z-10">
-              <span
-                className={`text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full ${activePalette.badge}`}
-              >
-                {category || 'ITEM'}
+            {/* Top row: Status indicator or spacer */}
+            <div className="flex items-center justify-between z-10 min-h-[18px]">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400">
+                Grupo: {category}
               </span>
             </div>
 
-            {/* BIG INITIALS */}
+            {/* BIG INITIALS in Group Text Color */}
             <div className="my-2 z-10 flex flex-col items-center justify-center">
               <div
                 className={`font-black tracking-tight ${activePalette.text} font-mono text-center ${
@@ -194,7 +187,7 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
             </div>
 
             {/* SMALL NAME ON CARD */}
-            <div className="z-10 pt-2 border-t border-slate-100 text-xs font-semibold text-slate-800 truncate text-left">
+            <div className="z-10 pt-2 border-t border-slate-100 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-100 truncate text-left">
               {name.trim() || 'Item Name'}
             </div>
           </div>
@@ -203,12 +196,12 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
         {/* Form Inputs */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Active / Inactive On-Off Toggle */}
-          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700">
             <div>
-              <p className="text-xs font-bold text-slate-800">
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
                 Menu Item Status (Turn On/Off)
               </p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 {isActive
                   ? 'Turned ON: Visible on Cards tab for dispatch'
                   : 'Turned OFF: Hidden from dispatch but saved for reuse'}
@@ -223,7 +216,7 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
                 setIsActive(!isActive);
               }}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
               }`}
             >
               <span
@@ -235,8 +228,8 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Card Name
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              Nome do Card
             </label>
             <input
               type="text"
@@ -244,20 +237,20 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Margherita Supreme"
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
+              placeholder="Ex: Salada Caesar, Margherita..."
+              className="w-full px-3.5 py-2.5 bg-white dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-colors"
             />
             {!isEditing && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                 <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-500" /> Ideas:
+                  <Sparkles className="w-3 h-3 text-amber-500" /> Sugestões:
                 </span>
                 {sampleSuggestions.slice(0, 3).map((sugg) => (
                   <button
                     key={sugg}
                     type="button"
                     onClick={() => setName(sugg)}
-                    className="text-[11px] px-2 py-0.5 bg-slate-100 text-slate-600 hover:text-slate-900 rounded-md transition-colors cursor-pointer"
+                    className="text-[11px] px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-md transition-colors cursor-pointer"
                   >
                     {sugg}
                   </button>
@@ -268,8 +261,8 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Big Initials / Code <span className="font-normal text-slate-400">(4+ chars supported)</span>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Iniciais Grandes <span className="font-normal text-slate-400">(até 4 letras)</span>
               </label>
               <input
                 type="text"
@@ -277,21 +270,21 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
                 value={customInitials}
                 onChange={(e) => setCustomInitials(e.target.value.toUpperCase())}
                 placeholder={getInitials(name || 'ITEM')}
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl font-mono text-center font-bold text-slate-900 uppercase focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                className="w-full px-3 py-2 bg-white dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 rounded-xl font-mono text-center font-bold text-slate-900 dark:text-white uppercase focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-slate-700">
-                  Category
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Grupo / Categoria
                 </label>
                 <button
                   type="button"
                   onClick={() => setIsAddingNewCat(!isAddingNewCat)}
-                  className="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer"
+                  className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 cursor-pointer"
                 >
-                  {isAddingNewCat ? 'Select' : '+ New'}
+                  {isAddingNewCat ? 'Selecionar' : '+ Novo'}
                 </button>
               </div>
 
@@ -301,8 +294,8 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
                     type="text"
                     value={newCatInput}
                     onChange={(e) => setNewCatInput(e.target.value)}
-                    placeholder="New category..."
-                    className="w-full px-2 py-1.5 bg-white border border-indigo-300 rounded-lg text-xs text-slate-900 focus:outline-none"
+                    placeholder="Novo grupo..."
+                    className="w-full px-2 py-1.5 bg-white dark:bg-slate-700/60 border border-indigo-300 dark:border-indigo-600 rounded-lg text-xs text-slate-900 dark:text-white focus:outline-none"
                   />
                   <button
                     type="button"
@@ -317,10 +310,10 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500"
                 >
                   {safeCategories.map((c) => (
-                    <option key={c} value={c}>
+                    <option key={c} value={c} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
                       {c}
                     </option>
                   ))}
@@ -329,27 +322,20 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Card Color Accent
-            </label>
-            <div className="flex items-center gap-2">
-              {COLOR_PALETTES.map((pal, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setSelectedPaletteIdx(idx)}
-                  className={`w-7 h-7 rounded-full border-2 transition-all flex items-center justify-center ${
-                    pal.border
-                  } ${pal.bg} ${
-                    selectedPaletteIdx === idx
-                      ? 'ring-2 ring-slate-900 ring-offset-2 scale-110'
-                      : 'hover:scale-105'
-                  }`}
-                >
-                  <span className={`w-2.5 h-2.5 rounded-full ${pal.pillBg}`} />
-                </button>
-              ))}
+          {/* Group Color Contour Indicator (Defined by Category) */}
+          <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700">
+            <span
+              className="w-4 h-4 rounded-full shrink-0 shadow-2xs border border-white/20"
+              style={{ backgroundColor: activePalette.hex }}
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                <span>Cor do Grupo:</span>
+                <span className={activePalette.text}>{activePalette.name}</span>
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                A cor de contorno deste card é definida pelo grupo <strong>"{category}"</strong>.
+              </p>
             </div>
           </div>
 
@@ -362,24 +348,24 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
                     onClick={handleDelete}
                     className="px-3 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition-colors cursor-pointer"
                   >
-                    Confirm Delete
+                    Confirmar Exclusão
                   </button>
                   <button
                     type="button"
                     onClick={() => setConfirmDelete(false)}
-                    className="px-2 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
+                    className="px-2 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                   >
-                    Cancel
+                    Cancelar
                   </button>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={() => setConfirmDelete(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition-colors cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>Remove Card</span>
+                  <span>Remover Card</span>
                 </button>
               )
             ) : (
@@ -390,16 +376,16 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl transition-colors cursor-pointer"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 type="submit"
                 disabled={!name.trim()}
-                className="px-5 py-2.5 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-xs transition-colors cursor-pointer"
+                className="px-5 py-2.5 text-sm font-bold text-white bg-slate-900 dark:bg-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                {isEditing ? 'Save Changes' : 'Add Card'}
+                {isEditing ? 'Salvar Alterações' : 'Adicionar Card'}
               </button>
             </div>
           </div>
