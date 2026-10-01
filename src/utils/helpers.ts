@@ -199,6 +199,7 @@ export function getColorForName(name: string) {
 }
 
 export const DEFAULT_CATEGORIES = [
+  'Lunch',
   'Pizza',
   'Sides',
   'Salad',
@@ -208,7 +209,67 @@ export const DEFAULT_CATEGORIES = [
   'Special',
 ];
 
+// Barcodes matching the reference sheet (Botanicca Shadowbook & Reference Spec)
+export const DEFAULT_CATEGORY_BARCODES: Record<string, string> = {
+  Lunch: '1796938',
+  LUNCH: '1796938',
+  Almoço: '1796938',
+  Salad: '0986216',
+  Salada: '0986216',
+  Pizza: '0342515',
+  Pizzas: '0342515',
+  PIZZA: '0342515',
+  Sides: '0342512',
+  Acompanhamentos: '0342512',
+  Pasta: '0402497',
+  Massas: '0402497',
+  Drinks: '9120446',
+  Bebidas: '9120446',
+  Dessert: '0342890',
+  Sobremesas: '0342890',
+  Special: '0338447',
+  Especiais: '0338447',
+  General: '0338453',
+};
+
+export function getCategoryBarcode(
+  categoryName?: string,
+  categoryBarcodes?: Record<string, string>
+): { name: string; code: string } {
+  const name = (categoryName || 'General').trim();
+  if (categoryBarcodes && categoryBarcodes[name]) {
+    return { name, code: categoryBarcodes[name] };
+  }
+  if (DEFAULT_CATEGORY_BARCODES[name]) {
+    return { name, code: DEFAULT_CATEGORY_BARCODES[name] };
+  }
+  // Try case-insensitive matching
+  const lower = name.toLowerCase();
+  for (const [key, val] of Object.entries(DEFAULT_CATEGORY_BARCODES)) {
+    if (key.toLowerCase() === lower) {
+      return { name, code: val };
+    }
+  }
+  // Deterministic 7-digit barcode number generator for any custom category
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash << 5) - hash + name.charCodeAt(i);
+    hash |= 0;
+  }
+  const positive = (Math.abs(hash) % 9000000) + 1000000;
+  return { name, code: `0${positive}`.slice(-7) };
+}
+
 export const INITIAL_CARDS: CardItem[] = [
+  {
+    id: 'card-0',
+    name: 'Executive Lunch',
+    initials: 'LNCH',
+    category: 'Lunch',
+    isActive: true,
+    colorScheme: COLOR_PALETTES[3], // sky
+    createdAt: Date.now() - 3700000,
+  },
   {
     id: 'card-1',
     name: 'Margherita Classic',

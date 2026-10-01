@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { CardItem } from '../types';
 import { X, Sparkles, Trash2, Edit3, Plus, Tag } from 'lucide-react';
-import { getInitials, getCategoryColorScheme, sounds } from '../utils/helpers';
+import { getInitials, getCategoryColorScheme, getCategoryBarcode, sounds } from '../utils/helpers';
+import { CategoryBarcode } from './CategoryBarcode';
 
 interface CardEditModalProps {
   isOpen: boolean;
@@ -191,22 +192,23 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
               {name.trim() || 'Item Name'}
             </div>
           </div>
+
+          {/* Reference Barcode Card (Code 128) */}
+          <div className="mt-3">
+            <CategoryBarcode
+              categoryName={category}
+              barcodeNumber={getCategoryBarcode(category).code}
+            />
+          </div>
         </div>
 
         {/* Form Inputs */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
           {/* Active / Inactive On-Off Toggle */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-750 border border-slate-200 dark:border-slate-700">
-            <div>
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                Menu Item Status (Turn On/Off)
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {isActive
-                  ? 'Turned ON: Visible on Cards tab for dispatch'
-                  : 'Turned OFF: Hidden from dispatch but saved for reuse'}
-              </p>
-            </div>
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+              {isActive ? 'Item Ativo (Visível)' : 'Item Desativado (Oculto)'}
+            </span>
             <button
               type="button"
               role="switch"
@@ -328,14 +330,14 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
               className="w-4 h-4 rounded-full shrink-0 shadow-2xs border border-white/20"
               style={{ backgroundColor: activePalette.hex }}
             />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+            <div className="flex-1 min-w-0 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                 <span>Cor do Grupo:</span>
                 <span className={activePalette.text}>{activePalette.name}</span>
-              </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                A cor de contorno deste card é definida pelo grupo <strong>"{category}"</strong>.
-              </p>
+              </span>
+              <span className="text-xs font-medium text-slate-400">
+                {category}
+              </span>
             </div>
           </div>
 

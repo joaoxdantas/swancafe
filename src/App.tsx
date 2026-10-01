@@ -15,6 +15,7 @@ import { TrackingBoard } from './components/TrackingBoard';
 import { MenuEditTab } from './components/MenuEditTab';
 import { CardEditModal } from './components/CardEditModal';
 import { OrderComposer } from './components/OrderComposer';
+import { FullScreenOrderView } from './components/FullScreenOrderView';
 import { Check, Layers, Activity, SlidersHorizontal } from 'lucide-react';
 import {
   testConnection,
@@ -277,6 +278,36 @@ export default function App() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [cardToEdit, setCardToEdit] = useState<CardItem | null>(null);
 
+  // Full Screen Order View State
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  const handleToggleFullScreen = () => {
+    sounds.playPop();
+    setIsFullScreen((prev) => {
+      const next = !prev;
+      if (next) {
+        if (typeof document !== 'undefined' && document.documentElement?.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      } else {
+        if (typeof document !== 'undefined' && document.fullscreenElement && document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleFsChange = () => {
+      if (typeof document !== 'undefined' && !document.fullscreenElement) {
+        setIsFullScreen(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
   // Toast Notification
   const [toastMessage, setToastMessage] = useState<{
     text: string;
@@ -395,6 +426,7 @@ export default function App() {
           cardId: card.id,
           cardName: card.name,
           initials: card.initials,
+          category: card.category,
           quantity: 1,
           colorScheme: groupScheme,
         },
@@ -776,41 +808,70 @@ export default function App() {
         onQuickDemoOrder={handleQuickDemoOrder}
         darkMode={darkMode}
         setDarkMode={setDarkMode}
+        onToggleFullScreen={handleToggleFullScreen}
       />
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {activeTab === 'cards' ? (
-          <div>
-            {/* Active Buzzer Order Composer (Multi-Item Support) */}
-            <OrderComposer
-              draftItems={draftItems}
-              onUpdateQuantity={handleUpdateDraftQuantity}
-              onClearDraft={handleClearDraft}
-              buzzerNumber={buzzerNumber}
-              setBuzzerNumber={setBuzzerNumber}
-              onSendOrder={handleSendDraftOrder}
-              availableCards={cards.filter((c) => c.isActive !== false)}
-              onAddCardToDraft={handleSelectCard}
-            />
-
-            {/* Cards Grid */}
-            <CardGrid
+          isFullScreen ? (
+            <FullScreenOrderView
               cards={cards}
               categories={categories}
               categoryColors={categoryColors}
               draftItems={draftItems}
+              onSelectCard={handleSelectCard}
+              onUpdateDraftQuantity={handleUpdateDraftQuantity}
+              onClearDraft={handleClearDraft}
+              onSendOrder={handleSendDraftOrder}
+              onExitFullScreen={handleToggleFullScreen}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               selectedCategory={selectedCategory}
               setSelectedCategory={setSelectedCategory}
-              onSelectCard={handleSelectCard}
               onNavigateToMenuEdit={() => {
+                setIsFullScreen(false);
                 sounds.playPop();
                 setActiveTab('menu-edit');
               }}
+              soundEnabled={soundEnabled}
+              setSoundEnabled={setSoundEnabled}
+              darkMode={darkMode}
+              setDarkMode={setDarkMode}
             />
-          </div>
+          ) : (
+            <div>
+              {/* Active Buzzer Order Composer (Multi-Item Support) */}
+              <OrderComposer
+                draftItems={draftItems}
+                onUpdateQuantity={handleUpdateDraftQuantity}
+                onClearDraft={handleClearDraft}
+                buzzerNumber={buzzerNumber}
+                setBuzzerNumber={setBuzzerNumber}
+                onSendOrder={handleSendDraftOrder}
+                availableCards={cards.filter((c) => c.isActive !== false)}
+                onAddCardToDraft={handleSelectCard}
+                onToggleFullScreen={handleToggleFullScreen}
+              />
+
+              {/* Cards Grid */}
+              <CardGrid
+                cards={cards}
+                categories={categories}
+                categoryColors={categoryColors}
+                draftItems={draftItems}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                onSelectCard={handleSelectCard}
+                onNavigateToMenuEdit={() => {
+                  sounds.playPop();
+                  setActiveTab('menu-edit');
+                }}
+              />
+            </div>
+          )
         ) : activeTab === 'tracking' ? (
           <TrackingBoard
             orders={orders}

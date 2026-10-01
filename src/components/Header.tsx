@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Activity, Volume2, VolumeX, Sparkles, SlidersHorizontal, Plus, Moon, Sun } from 'lucide-react';
+import { Layers, Activity, Volume2, VolumeX, Sparkles, SlidersHorizontal, Plus, Moon, Sun, Maximize2 } from 'lucide-react';
 import { sounds } from '../utils/helpers';
 
 interface HeaderProps {
@@ -13,6 +13,7 @@ interface HeaderProps {
   onQuickDemoOrder: () => void;
   darkMode: boolean;
   setDarkMode: (enabled: boolean) => void;
+  onToggleFullScreen?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -26,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
   onQuickDemoOrder,
   darkMode,
   setDarkMode,
+  onToggleFullScreen,
 }) => {
   const activeOrdersTotal = queueCount + ovenCount;
 
@@ -47,9 +49,6 @@ export const Header: React.FC<HeaderProps> = ({
                 Live Sync
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
-              Clean Dispatch &amp; Kitchen Tracking
-            </p>
           </div>
         </div>
 
@@ -135,6 +134,18 @@ export const Header: React.FC<HeaderProps> = ({
               </>
             )}
           </button>
+
+          {activeTab === 'cards' && onToggleFullScreen && (
+            <button
+              type="button"
+              onClick={onToggleFullScreen}
+              title="Abrir em Tela Cheia (Duas Colunas)"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 hover:bg-amber-200 dark:hover:bg-amber-900 border border-amber-300/80 dark:border-amber-700/60 rounded-xl transition-all cursor-pointer shadow-2xs"
+            >
+              <Maximize2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span className="hidden sm:inline">Tela Cheia</span>
+            </button>
+          )}
 
           {activeTab === 'menu-edit' && (
             <button

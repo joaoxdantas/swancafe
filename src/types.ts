@@ -20,6 +20,7 @@ export interface OrderItemLine {
   cardId: string;
   cardName: string;
   initials: string;
+  category?: string;
   quantity: number;
   colorScheme: {
     bg: string;
