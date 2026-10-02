@@ -106,10 +106,11 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
   };
 
   const handleDeleteCat = (cat: string) => {
+    sounds.playPop();
     setCatToDelete(cat);
   };
 
-  // Filter & Sort Cards
+  // Filtered Cards
   const processedCards = useMemo(() => {
     let result = cards.filter((c) => {
       const matchesSearch =
@@ -117,31 +118,28 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
         c.initials.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory =
         selectedCategory === 'All' || c.category === selectedCategory;
-      const isAct = c.isActive !== false;
+      const isCardActive = c.isActive !== false;
       const matchesStatus =
         statusFilter === 'all'
           ? true
           : statusFilter === 'active'
-          ? isAct
-          : !isAct;
+          ? isCardActive
+          : !isCardActive;
 
       return matchesSearch && matchesCategory && matchesStatus;
     });
 
+    // Sorting
     if (sortMode === 'az') {
-      result = [...result].sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
-      );
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
     } else if (sortMode === 'za') {
-      result = [...result].sort((a, b) =>
-        b.name.localeCompare(a.name, undefined, { sensitivity: 'base' })
-      );
+      result = [...result].sort((a, b) => b.name.localeCompare(a.name, undefined, { sensitivity: 'base' }));
     }
 
     return result;
   }, [cards, searchQuery, selectedCategory, statusFilter, sortMode]);
 
-  // Group items by category / type
+  // Grouped cards by Category
   const groupedCategories = useMemo(() => {
     if (!groupByType || selectedCategory !== 'All') return null;
 
@@ -165,7 +163,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
 
     const remaining = processedCards.filter((c) => !usedIds.has(c.id));
     if (remaining.length > 0) {
-      groups.push({ category: 'Outros', cards: remaining });
+      groups.push({ category: 'Other Items', cards: remaining });
     }
 
     return groups;
@@ -182,10 +180,10 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
     return (
       <div
         key={card.id}
-        className={`p-4 rounded-2xl border-2 transition-all duration-200 bg-white dark:bg-slate-800 shadow-sm hover:shadow-md flex flex-col justify-between gap-3 ${
+        className={`p-4 rounded-2xl border-2 transition-all duration-200 bg-white dark:bg-stone-850 shadow-sm hover:shadow-md flex flex-col justify-between gap-3 ${
           isCardActive
             ? `${colorScheme.border}`
-            : 'border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 opacity-60'
+            : 'border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-850/50 opacity-60'
         }`}
       >
         {/* Top Bar: Group Name & Active/Off Toggle */}
@@ -194,7 +192,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
             className={`text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full ${
               isCardActive
                 ? colorScheme.badge
-                : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
+                : 'bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-400'
             }`}
           >
             {card.category || 'General'}
@@ -204,10 +202,10 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
           <div className="flex items-center gap-2">
             <span
               className={`text-[11px] font-bold ${
-                isCardActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400'
+                isCardActive ? 'text-emerald-700 dark:text-emerald-400' : 'text-stone-400'
               }`}
             >
-              {isCardActive ? 'ATIVO' : 'DESLIGADO'}
+              {isCardActive ? 'ACTIVE' : 'OFF'}
             </span>
             <button
               type="button"
@@ -217,13 +215,9 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 sounds.playPop();
                 onToggleCardActive(card.id);
               }}
-              title={
-                isCardActive
-                  ? 'Desativar item'
-                  : 'Ativar item'
-              }
+              title={isCardActive ? 'Deactivate item' : 'Activate item'}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                isCardActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'
+                isCardActive ? 'bg-emerald-500' : 'bg-stone-300 dark:bg-stone-600'
               }`}
             >
               <span
@@ -238,7 +232,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
         {/* Card Main Info: Big Initials + Item Name */}
         <div className="flex items-center gap-3.5 my-1">
           <div
-            className={`min-w-14 px-2 h-14 rounded-2xl border-2 ${colorScheme.border} bg-slate-50 dark:bg-slate-700/60 flex items-center justify-center font-mono font-black shrink-0 shadow-2xs ${
+            className={`min-w-14 px-2 h-14 rounded-2xl border-2 ${colorScheme.border} bg-stone-50 dark:bg-stone-800 flex items-center justify-center font-mono font-black shrink-0 shadow-2xs ${
               initials.length <= 2
                 ? 'text-2xl'
                 : initials.length <= 4
@@ -249,40 +243,40 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
             {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
+            <h4 className="text-sm font-bold text-stone-900 dark:text-white truncate">
               {card.name}
             </h4>
           </div>
         </div>
 
         {/* Actions: Edit, Duplicate, Delete */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+        <div className="pt-2 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between">
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => onEditCard(card)}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-stone-700 dark:text-stone-200 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg transition-colors cursor-pointer"
             >
               <Edit2 className="w-3 h-3" />
-              <span>Editar</span>
+              <span>Edit</span>
             </button>
 
             <button
               type="button"
               onClick={() => onDuplicateCard(card)}
-              title="Duplicar item"
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-lg transition-colors cursor-pointer"
+              title="Duplicate item"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg transition-colors cursor-pointer"
             >
               <Copy className="w-3 h-3" />
-              <span>Copiar</span>
+              <span>Copy</span>
             </button>
           </div>
 
           <button
             type="button"
             onClick={() => setCardToDelete(card)}
-            title="Excluir item"
-            className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
+            title="Delete item"
+            className="p-1.5 text-stone-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -292,32 +286,32 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Intro Header */}
-      <div className="pb-3 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-4">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Grupos &amp; Cardápio
+    <div className="space-y-6">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-200/80 dark:border-stone-800">
+        <h2 className="text-xl font-bold text-stone-900 dark:text-white tracking-tight">
+          Menu &amp; Categories Editor
         </h2>
 
         <button
           type="button"
           onClick={onOpenAddModal}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-orange-600 hover:bg-orange-500 rounded-xl shadow-xs transition-colors cursor-pointer shrink-0"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white bg-amber-600 hover:bg-amber-500 rounded-xl shadow-xs transition-colors cursor-pointer shrink-0"
         >
           <PlusCircle className="w-4 h-4" />
-          <span>Novo Item</span>
+          <span>New Item</span>
         </button>
       </div>
 
       {/* SECTION 1: CATEGORY MANAGEMENT WITH GROUP COLOR PICKER */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-4 sm:p-5 space-y-4">
+      <div className="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm p-4 sm:p-5 space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold">
               <Tag className="w-4 h-4" />
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">
-              Grupos &amp; Cores
+            <h3 className="text-base font-bold text-stone-900 dark:text-white">
+              Categories &amp; Colors
             </h3>
           </div>
 
@@ -330,16 +324,16 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 onChange={(e) => {
                   const val = e.target.value;
                   setNewCatInput(val);
-                  if (val.toLowerCase().includes('salad') || val.toLowerCase().includes('verde')) {
+                  if (val.toLowerCase().includes('salad') || val.toLowerCase().includes('green')) {
                     setNewCatColor('emerald');
                   }
                 }}
-                placeholder="Nome do grupo..."
-                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-700/60 border border-slate-300 dark:border-slate-600 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-slate-400 min-w-[170px]"
+                placeholder="Category name..."
+                className="px-3 py-1.5 bg-stone-50 dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-xl text-xs sm:text-sm text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 placeholder:text-stone-400 min-w-[170px]"
               />
 
               {/* Color Swatch Picker for New Category */}
-              <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-700/80 rounded-xl border border-slate-200 dark:border-slate-600">
+              <div className="flex items-center gap-1.5 p-1 bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700">
                 {CATEGORY_COLOR_OPTIONS.slice(0, 6).map((colorOpt) => (
                   <button
                     key={colorOpt.id}
@@ -351,7 +345,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                     }}
                     className={`w-5 h-5 rounded-full transition-transform cursor-pointer flex items-center justify-center ${
                       newCatColor === colorOpt.id
-                        ? 'ring-2 ring-slate-900 dark:ring-white scale-110 shadow-xs'
+                        ? 'ring-2 ring-stone-900 dark:ring-white scale-110 shadow-xs'
                         : 'hover:scale-105 opacity-80 hover:opacity-100'
                     }`}
                     style={{ backgroundColor: colorOpt.hex }}
@@ -367,10 +361,10 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
             <button
               type="submit"
               disabled={!newCatInput.trim()}
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-white bg-slate-900 dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl transition-colors cursor-pointer shrink-0"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-white bg-stone-900 dark:bg-white dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-100 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl transition-colors cursor-pointer shrink-0"
             >
               <Plus className="w-4 h-4" />
-              <span>Criar Grupo</span>
+              <span>Add Category</span>
             </button>
           </form>
         </div>
@@ -391,8 +385,8 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                       catScheme.border
                     } ${
                       isEditing
-                        ? 'bg-white dark:bg-slate-800 ring-2 ring-indigo-500'
-                        : 'bg-white dark:bg-slate-750/90 text-slate-800 dark:text-slate-100'
+                        ? 'bg-white dark:bg-stone-800 ring-2 ring-indigo-500'
+                        : 'bg-white dark:bg-stone-850 text-stone-800 dark:text-stone-100'
                     }`}
                   >
                     {isEditing ? (
@@ -406,21 +400,21 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                             if (e.key === 'Enter') handleSaveRename(cat);
                             if (e.key === 'Escape') setEditingCatName(null);
                           }}
-                          className="px-2 py-0.5 bg-slate-50 dark:bg-slate-700 border border-indigo-400 rounded-md text-xs font-bold text-slate-900 dark:text-white focus:outline-none w-28"
+                          className="px-2 py-0.5 bg-stone-50 dark:bg-stone-700 border border-indigo-400 rounded-md text-xs font-bold text-stone-900 dark:text-white focus:outline-none w-28"
                         />
                         <button
                           type="button"
                           onClick={() => handleSaveRename(cat)}
                           className="p-1 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950 rounded cursor-pointer"
-                          title="Salvar"
+                          title="Save"
                         >
                           <Check className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingCatName(null)}
-                          className="p-1 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded cursor-pointer"
-                          title="Cancelar"
+                          className="p-1 text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-700 rounded cursor-pointer"
+                          title="Cancel"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -435,26 +429,26 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                           }}
                           className="w-3.5 h-3.5 rounded-full shrink-0 shadow-2xs hover:scale-125 transition-transform cursor-pointer ring-1 ring-black/20 dark:ring-white/20"
                           style={{ backgroundColor: catScheme.hex }}
-                          title={`Cor: ${catScheme.name}`}
+                          title={`Color: ${catScheme.name}`}
                         />
 
-                        <span className="font-bold text-slate-800 dark:text-white">
+                        <span className="font-bold text-stone-800 dark:text-white">
                           {cat}
                         </span>
 
-                        <span className="px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-mono">
+                        <span className="px-1.5 py-0.5 rounded-full bg-stone-100 dark:bg-stone-700 text-stone-600 dark:text-stone-300 text-[10px] font-mono">
                           {itemCount}
                         </span>
 
-                        <span className="text-[10px] font-mono font-bold text-slate-400 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700" title="Código de Referência Code 128">
+                        <span className="text-[10px] font-mono font-bold text-stone-400 dark:text-stone-400 bg-stone-50 dark:bg-stone-800 px-1.5 py-0.5 rounded border border-stone-200 dark:border-stone-700" title="Code 128 Barcode Reference">
                           {getCategoryBarcode(cat).code}
                         </span>
 
                         <button
                           type="button"
                           onClick={() => handleStartRename(cat)}
-                          title="Renomear"
-                          className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/70 rounded transition-colors cursor-pointer"
+                          title="Rename"
+                          className="p-1 text-stone-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/70 rounded transition-colors cursor-pointer"
                         >
                           <Edit2 className="w-3 h-3" />
                         </button>
@@ -463,8 +457,8 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                           <button
                             type="button"
                             onClick={() => handleDeleteCat(cat)}
-                            title="Excluir"
-                            className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/70 rounded transition-colors cursor-pointer"
+                            title="Delete"
+                            className="p-1 text-stone-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/70 rounded transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -475,7 +469,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
 
                   {/* Inline Color Palette Popover for this Category */}
                   {isColorPickerOpen && (
-                    <div className="absolute left-0 top-full mt-1.5 z-30 p-2.5 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 animate-in zoom-in-95 duration-150">
+                    <div className="absolute left-0 top-full mt-1.5 z-30 p-2.5 bg-white dark:bg-stone-800 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-700 flex items-center gap-1.5 animate-in zoom-in-95 duration-150">
                       {CATEGORY_COLOR_OPTIONS.map((c) => {
                         const isCurrent = (categoryColors?.[cat] || catScheme.id) === c.id;
                         return (
@@ -486,7 +480,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                             title={c.name}
                             className={`w-6 h-6 rounded-full transition-transform cursor-pointer flex items-center justify-center ${
                               isCurrent
-                                ? 'ring-2 ring-slate-900 dark:ring-white scale-110'
+                                ? 'ring-2 ring-stone-900 dark:ring-white scale-110'
                                 : 'hover:scale-115 opacity-80 hover:opacity-100'
                             }`}
                             style={{ backgroundColor: c.hex }}
@@ -500,8 +494,8 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                       <button
                         type="button"
                         onClick={() => setActiveColorPickerCat(null)}
-                        className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded cursor-pointer ml-1"
-                        title="Fechar"
+                        className="p-1 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded cursor-pointer ml-1"
+                        title="Close"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -517,16 +511,16 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
       {/* SECTION 2: ITEM CARDS WITH ORGANIZATION & REORDER TOOLS */}
       <div className="space-y-4">
         {/* Filters, Search & Reorder Bar */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-slate-800 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white dark:bg-stone-900 p-3.5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-sm">
           {/* Search */}
           <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar..."
-              className="w-full pl-9 pr-4 py-1.5 bg-slate-50 dark:bg-slate-700/60 border border-slate-200 dark:border-slate-600 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 text-slate-900 dark:text-white placeholder:text-slate-400"
+              placeholder="Search items..."
+              className="w-full pl-9 pr-4 py-1.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-stone-900 dark:text-white placeholder:text-stone-400"
             />
           </div>
 
@@ -541,17 +535,17 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 }}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-colors cursor-pointer ${
                   groupByType
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-2xs'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 border-stone-900 dark:border-white shadow-2xs'
+                    : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
                 }`}
               >
                 {groupByType ? <Layers className="w-3.5 h-3.5" /> : <LayoutGrid className="w-3.5 h-3.5" />}
-                <span>{groupByType ? 'Agrupado por Tipo' : 'Grade Única'}</span>
+                <span>{groupByType ? 'Grouped by Category' : 'Flat Grid'}</span>
               </button>
             )}
 
-            {/* Sort Controls: Padrão, A-Z, Z-A */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-700/70 rounded-xl border border-slate-200/80 dark:border-slate-600 p-0.5">
+            {/* Sort Controls: Default, A-Z, Z-A */}
+            <div className="flex items-center bg-stone-100 dark:bg-stone-800 rounded-xl border border-stone-200/80 dark:border-stone-700 p-0.5">
               <button
                 type="button"
                 onClick={() => {
@@ -560,11 +554,11 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 }}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   sortMode === 'default'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-2xs'
+                    : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
                 }`}
               >
-                Padrão
+                Default
               </button>
 
               <button
@@ -573,11 +567,11 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                   sounds.playPop();
                   setSortMode(sortMode === 'az' ? 'za' : 'az');
                 }}
-                title={sortMode === 'az' ? 'Ordem Z-A' : 'Ordem A-Z'}
+                title={sortMode === 'az' ? 'Sort Z to A' : 'Sort A to Z'}
                 className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   sortMode === 'az' || sortMode === 'za'
-                    ? 'bg-orange-600 text-white shadow-2xs font-bold'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-amber-500 text-stone-950 shadow-2xs font-bold'
+                    : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
                 }`}
               >
                 {sortMode === 'za' ? (
@@ -595,17 +589,17 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
             </div>
 
             {/* Status Filter: All / Active / Off */}
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700/70 p-0.5 rounded-xl border border-slate-200/80 dark:border-slate-600">
+            <div className="flex items-center gap-1 bg-stone-100 dark:bg-stone-800 p-0.5 rounded-xl border border-stone-200/80 dark:border-stone-700">
               <button
                 type="button"
                 onClick={() => setStatusFilter('all')}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   statusFilter === 'all'
-                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-2xs'
+                    : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
                 }`}
               >
-                Todos ({cards.length})
+                All ({cards.length})
               </button>
               <button
                 type="button"
@@ -613,18 +607,18 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   statusFilter === 'active'
                     ? 'bg-emerald-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
                 }`}
               >
-                Ativos ({activeCount})
+                Active ({activeCount})
               </button>
               <button
                 type="button"
                 onClick={() => setStatusFilter('inactive')}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                   statusFilter === 'inactive'
-                    ? 'bg-slate-800 dark:bg-slate-600 text-white shadow-2xs'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-stone-800 dark:bg-stone-600 text-white shadow-2xs'
+                    : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
                 }`}
               >
                 Off ({inactiveCount})
@@ -644,8 +638,8 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 onClick={() => setSelectedCategory(cat)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
                   selectedCategory === cat
-                    ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
-                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                    ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-900 shadow-xs'
+                    : 'bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700'
                 }`}
               >
                 {catScheme && (
@@ -660,7 +654,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
           })}
         </div>
 
-        {/* Cards Grid: Grouped by Type OR Flat Grid */}
+        {/* Cards Grid: Grouped by Category OR Flat Grid */}
         {groupedCategories ? (
           groupedCategories.length > 0 ? (
             <div className="space-y-6">
@@ -669,15 +663,15 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 return (
                   <div key={grp.category} className="space-y-3">
                     {/* Category Type Header */}
-                    <div className="flex items-center gap-2 pt-1 border-b border-slate-200/60 dark:border-slate-800 pb-1.5">
+                    <div className="flex items-center gap-2 pt-1 border-b border-stone-200/60 dark:border-stone-800 pb-1.5">
                       <span
                         className="w-3 h-3 rounded-full shadow-2xs shrink-0"
                         style={{ backgroundColor: catScheme.hex }}
                       />
-                      <h3 className="text-sm font-bold tracking-wider uppercase text-slate-800 dark:text-slate-200">
+                      <h3 className="text-sm font-bold tracking-wider uppercase text-stone-800 dark:text-stone-200">
                         {grp.category}
                       </h3>
-                      <span className="text-xs font-mono font-semibold text-slate-400">
+                      <span className="text-xs font-mono font-semibold text-stone-400">
                         ({grp.cards.length})
                       </span>
                     </div>
@@ -690,9 +684,9 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
               })}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-8">
-              <p className="text-slate-500 dark:text-slate-300 text-sm">
-                Nenhum card encontrado.
+            <div className="text-center py-12 bg-white dark:bg-stone-850 rounded-2xl border border-stone-200/80 dark:border-stone-800 p-8">
+              <p className="text-stone-500 dark:text-stone-300 text-sm">
+                No items found.
               </p>
             </div>
           )
@@ -701,9 +695,9 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
             {processedCards.map((card) => renderCardItem(card))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-8">
-            <p className="text-slate-500 dark:text-slate-300 text-sm">
-              Nenhum card encontrado para o filtro.
+          <div className="text-center py-12 bg-white dark:bg-stone-850 rounded-2xl border border-stone-200/80 dark:border-stone-800 p-8">
+            <p className="text-stone-500 dark:text-stone-300 text-sm">
+              No items matched the selected filters.
             </p>
             <button
               type="button"
@@ -712,9 +706,9 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 setSelectedCategory('All');
                 setStatusFilter('all');
               }}
-              className="mt-3 text-xs font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 underline cursor-pointer"
+              className="mt-3 text-xs font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 underline cursor-pointer"
             >
-              Limpar filtros
+              Clear filters
             </button>
           </div>
         )}
@@ -723,28 +717,28 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
       {/* IN-APP MODAL: CONFIRM DELETE CARD */}
       {cardToDelete && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-xs animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 dark:bg-black/80 backdrop-blur-xs animate-in fade-in duration-150"
           onClick={() => setCardToDelete(null)}
         >
           <div
-            className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4"
+            className="w-full max-w-sm bg-white dark:bg-stone-800 rounded-3xl p-6 shadow-2xl border border-stone-200 dark:border-stone-700 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Excluir &ldquo;{cardToDelete.name}&rdquo;?
+              <h3 className="text-base font-bold text-stone-900 dark:text-white">
+                Delete &ldquo;{cardToDelete.name}&rdquo;?
               </h3>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setCardToDelete(null)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-bold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors cursor-pointer"
               >
-                Cancelar
+                Cancel
               </button>
               <button
                 type="button"
@@ -755,7 +749,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 }}
                 className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
               >
-                Excluir
+                Delete
               </button>
             </div>
           </div>
@@ -765,28 +759,28 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
       {/* IN-APP MODAL: CONFIRM DELETE CATEGORY */}
       {catToDelete && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-xs animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 dark:bg-black/80 backdrop-blur-xs animate-in fade-in duration-150"
           onClick={() => setCatToDelete(null)}
         >
           <div
-            className="w-full max-w-sm bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4"
+            className="w-full max-w-sm bg-white dark:bg-stone-800 rounded-3xl p-6 shadow-2xl border border-stone-200 dark:border-stone-700 space-y-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-300 flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Excluir Grupo &ldquo;{catToDelete}&rdquo;?
+              <h3 className="text-base font-bold text-stone-900 dark:text-white">
+                Delete Category &ldquo;{catToDelete}&rdquo;?
               </h3>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setCatToDelete(null)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-bold text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors cursor-pointer"
               >
-                Cancelar
+                Cancel
               </button>
               <button
                 type="button"
@@ -797,7 +791,7 @@ export const MenuEditTab: React.FC<MenuEditTabProps> = ({
                 }}
                 className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-xs font-bold text-white shadow-xs transition-colors cursor-pointer"
               >
-                Excluir
+                Delete
               </button>
             </div>
           </div>

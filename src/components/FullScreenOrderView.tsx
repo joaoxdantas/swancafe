@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CardItem, OrderItemLine } from '../types';
+import { CardItem, OrderItem, OrderItemLine } from '../types';
 import { CardGrid } from './CardGrid';
 import { BuzzerModal } from './BuzzerModal';
 import { CategoryBarcode } from './CategoryBarcode';
@@ -14,7 +14,11 @@ import {
   VolumeX,
   Moon,
   Sun,
-  X,
+  Coffee,
+  Eye,
+  EyeOff,
+  CheckCircle2,
+  RotateCcw,
 } from 'lucide-react';
 import { sounds, getCategoryBarcode } from '../utils/helpers';
 
@@ -27,7 +31,7 @@ interface FullScreenOrderViewProps {
   onSelectCard: (card: CardItem) => void;
   onUpdateDraftQuantity: (cardId: string, delta: number) => void;
   onClearDraft: () => void;
-  onSendOrder: (notes?: string, customBuzzer?: string) => void;
+  onSendOrder: (notes?: string, customBuzzer?: string, isDigital?: boolean, existingOrderId?: string) => void;
   onExitFullScreen: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
@@ -38,6 +42,7 @@ interface FullScreenOrderViewProps {
   setSoundEnabled: (val: boolean) => void;
   darkMode: boolean;
   setDarkMode: (val: boolean) => void;
+  existingOrders: OrderItem[];
 }
 
 export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
@@ -60,9 +65,11 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
   setSoundEnabled,
   darkMode,
   setDarkMode,
+  existingOrders,
 }) => {
   const [notes, setNotes] = useState('');
   const [isBuzzerModalOpen, setIsBuzzerModalOpen] = useState(false);
+  const [hiddenBarcodes, setHiddenBarcodes] = useState<Set<string>>(new Set());
 
   const totalItemsCount = draftItems.reduce((acc, it) => acc + it.quantity, 0);
 
@@ -72,25 +79,44 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
     setIsBuzzerModalOpen(true);
   };
 
-  const handleConfirmBuzzer = (buzzerNumber: string) => {
-    onSendOrder(notes.trim(), buzzerNumber);
+  const handleConfirmBuzzer = (buzzerNumber: string, isDigital?: boolean, existingOrderId?: string) => {
+    onSendOrder(notes.trim(), buzzerNumber, isDigital, existingOrderId);
     setNotes('');
+    setHiddenBarcodes(new Set());
+  };
+
+  const toggleBarcodeVisibility = (cardId: string) => {
+    sounds.playPop();
+    setHiddenBarcodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) {
+        next.delete(cardId);
+      } else {
+        next.add(cardId);
+      }
+      return next;
+    });
+  };
+
+  const handleUnhideAllBarcodes = () => {
+    sounds.playPop();
+    setHiddenBarcodes(new Set());
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-50 dark:bg-slate-950 flex flex-col overflow-hidden text-slate-900 dark:text-slate-100 font-sans animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 bg-stone-50 dark:bg-stone-950 flex flex-col overflow-hidden text-stone-900 dark:text-stone-100 font-sans animate-in fade-in duration-150">
       {/* Top Header Bar */}
-      <header className="h-14 sm:h-16 px-4 sm:px-6 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0 shadow-xs z-10">
+      <header className="h-14 sm:h-16 px-4 sm:px-6 bg-white dark:bg-stone-900 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between gap-3 shrink-0 shadow-xs z-10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-base shadow-sm shadow-orange-500/30">
-            OF
+          <div className="w-9 h-9 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold text-base shadow-sm shadow-amber-500/30">
+            <Coffee className="w-5 h-5" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white">
-              OrderFlow
+            <span className="text-base sm:text-lg font-black tracking-tight text-stone-900 dark:text-white">
+              Australian Cafe Kiosk
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-100 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
-              Tela Cheia
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+              Full Screen (60/40 Split)
             </span>
           </div>
         </div>
@@ -106,13 +132,13 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
               setSoundEnabled(next);
               if (next) sounds.playPop();
             }}
-            title={soundEnabled ? 'Silenciar sons' : 'Ativar sons'}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+            title={soundEnabled ? 'Mute sound' : 'Enable sound'}
+            className="p-2 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 transition-colors cursor-pointer"
           >
             {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+              <Volume2 className="w-4 h-4 text-stone-600 dark:text-stone-300" />
             ) : (
-              <VolumeX className="w-4 h-4 text-slate-400" />
+              <VolumeX className="w-4 h-4 text-stone-400" />
             )}
           </button>
 
@@ -120,167 +146,224 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
           <button
             type="button"
             onClick={() => {
-              const next = !darkMode;
-              setDarkMode(next);
               sounds.playPop();
+              setDarkMode(!darkMode);
             }}
-            title={darkMode ? 'Modo Claro' : 'Modo Escuro'}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+            title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="p-2 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 transition-colors cursor-pointer"
           >
             {darkMode ? (
               <Sun className="w-4 h-4 text-amber-400" />
             ) : (
-              <Moon className="w-4 h-4 text-slate-600" />
+              <Moon className="w-4 h-4 text-stone-600" />
             )}
           </button>
 
-          {/* Exit Full Screen Button */}
+          {/* Exit Full Screen */}
           <button
             type="button"
             onClick={() => {
               sounds.playPop();
               onExitFullScreen();
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 text-xs font-bold text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
           >
-            <Minimize2 className="w-4 h-4" />
-            <span>Sair Tela Cheia</span>
+            <Minimize2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Exit Full Screen</span>
           </button>
         </div>
       </header>
 
-      {/* Main 2-Column Split Layout: Exactly 60% Left for Cards, 40% Right for Order Comanda */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* LEFT COLUMN (60%): Cards Menu Grid (Scrollable, Compact Cards) */}
-        <div className="w-[60%] h-full overflow-y-auto p-3 sm:p-4 md:p-5 border-r border-slate-200 dark:border-slate-800 shrink-0">
+      {/* Main Dual-Column Workspace: 40% Left (Items Grid) / 60% Right (Order & Barcodes) */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Left Column: Interactive Cards Grid (40% width on desktop/kiosk) */}
+        <div className="w-full lg:w-[40%] overflow-y-auto p-4 sm:p-5 lg:border-r border-stone-200 dark:border-stone-800">
           <CardGrid
             cards={cards}
             categories={categories}
             categoryColors={categoryColors}
+            categoryBarcodes={categoryBarcodes}
             draftItems={draftItems}
+            onSelectCard={onSelectCard}
+            onNavigateToMenuEdit={onNavigateToMenuEdit}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
-            onSelectCard={onSelectCard}
-            onNavigateToMenuEdit={onNavigateToMenuEdit}
-            compact={true}
           />
         </div>
 
-        {/* RIGHT COLUMN (40%): Items receiving the clicked order + Floating Send Button */}
-        <div className="w-[40%] h-full flex flex-col bg-white dark:bg-slate-900 shadow-xl relative shrink-0">
-          {/* Right Column Header */}
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/70 dark:bg-slate-850">
+        {/* Right Column: Dedicated Live Order & Barcode Scanning Column (60% width on desktop/kiosk) */}
+        <div className="w-full lg:w-[60%] bg-white dark:bg-stone-900 flex flex-col shrink-0 border-t lg:border-t-0 border-stone-200 dark:border-stone-800 shadow-xl relative z-10 overflow-hidden">
+          {/* Order Header */}
+          <div className="p-4 sm:p-5 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between gap-3 bg-stone-50/50 dark:bg-stone-950/30">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-500 flex items-center justify-center font-bold">
-                <ShoppingBag className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-500 border border-amber-500/30 flex items-center justify-center font-bold">
+                <ShoppingBag className="w-5 h-5" />
               </div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Pedido Atual
-              </h3>
-              {totalItemsCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-xs font-black bg-orange-600 text-white shadow-2xs">
-                  {totalItemsCount}
-                </span>
-              )}
+              <div>
+                <h3 className="text-base font-bold text-stone-900 dark:text-white">
+                  Order Summary & Barcode Scanning
+                </h3>
+                <p className="text-xs text-stone-400">
+                  {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'} in order · Scan barcodes to register items
+                </p>
+              </div>
             </div>
 
-            {draftItems.length > 0 && (
-              <button
-                type="button"
-                onClick={onClearDraft}
-                className="text-xs font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 px-2 py-1 rounded-lg transition-colors cursor-pointer"
-              >
-                Limpar
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {hiddenBarcodes.size > 0 && (
+                <button
+                  type="button"
+                  onClick={handleUnhideAllBarcodes}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 border border-amber-300 dark:border-amber-800 transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Unhide All ({hiddenBarcodes.size})</span>
+                </button>
+              )}
+
+              {draftItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClearDraft();
+                    setHiddenBarcodes(new Set());
+                  }}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Middle: Scrollable list of clicked items */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-28">
+          {/* Items List with Generous Spacing to Prevent Accidental Barcode Scans */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 pb-32">
             {draftItems.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 dark:text-slate-500 space-y-2">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
-                  <ShoppingBag className="w-7 h-7" />
+              <div className="h-full min-h-[260px] flex flex-col items-center justify-center text-center p-6 space-y-3">
+                <div className="w-20 h-20 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-300 dark:text-stone-600 flex items-center justify-center">
+                  <ShoppingBag className="w-10 h-10" />
                 </div>
-                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-                  Nenhum item selecionado
-                </p>
-                <p className="text-xs max-w-[220px]">
-                  Clique nos cards à esquerda para adicionar ao pedido.
-                </p>
+                <div className="space-y-1">
+                  <p className="text-base font-bold text-stone-700 dark:text-stone-300">
+                    No items in current order
+                  </p>
+                  <p className="text-xs text-stone-400 max-w-[300px]">
+                    Select items from the menu on the left to generate their scannable barcodes.
+                  </p>
+                </div>
               </div>
             ) : (
               <>
-                <div className="space-y-3">
+                <div className="space-y-6">
                   {draftItems.map((item) => {
-                    const itemCategory = item.category || cards.find((c) => c.id === item.cardId)?.category || 'General';
-                    const barcodeData = getCategoryBarcode(itemCategory, categoryBarcodes);
+                    const barcodeData = getCategoryBarcode(
+                      item.category || item.cardName,
+                      categoryBarcodes
+                    );
+                    const isHidden = hiddenBarcodes.has(item.cardId);
 
                     return (
                       <div
                         key={item.cardId}
-                        className="p-3 bg-slate-50 dark:bg-slate-800/90 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs space-y-2.5"
+                        className={`p-4 sm:p-5 rounded-2xl border transition-all duration-150 shadow-sm ${
+                          isHidden
+                            ? 'bg-stone-50/70 dark:bg-stone-900/60 border-stone-200 dark:border-stone-800 opacity-90'
+                            : 'bg-white dark:bg-stone-850 border-stone-300 dark:border-stone-700/80 shadow-md ring-1 ring-stone-200/50 dark:ring-stone-800'
+                        }`}
                       >
-                        {/* Item Row */}
-                        <div className="flex items-center justify-between gap-3">
-                          {/* Initials badge with group border */}
-                          <div
-                            className={`min-w-12 px-1.5 h-11 rounded-xl border-2 ${item.colorScheme.border} ${item.colorScheme.bg} flex items-center justify-center font-mono font-black shrink-0 ${
-                              item.initials.length <= 2
-                                ? 'text-lg'
-                                : item.initials.length <= 4
-                                ? 'text-sm'
-                                : 'text-xs'
-                            } ${item.colorScheme.text}`}
-                          >
-                            {item.initials}
-                          </div>
-
-                          {/* Card name */}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
-                              {item.cardName}
-                            </h4>
-                            <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                              Qtd: <strong className="text-slate-800 dark:text-slate-200">{item.quantity}</strong>
+                        {/* Top Row: Item Details, Steppers, and Hide Barcode Button */}
+                        <div className="flex items-center justify-between gap-3 pb-3 border-b border-stone-100 dark:border-stone-800">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono font-black text-xs border shrink-0 ${item.colorScheme.border} ${item.colorScheme.bg} ${item.colorScheme.text}`}
+                            >
+                              {item.initials}
                             </span>
+                            <div className="min-w-0">
+                              <p className="text-sm sm:text-base font-black text-stone-900 dark:text-white truncate">
+                                {item.cardName}
+                              </p>
+                              <span className="text-xs text-stone-500 dark:text-stone-400">
+                                {item.category || 'General'}
+                              </span>
+                            </div>
                           </div>
 
-                          {/* Counter Controls: - and + */}
-                          <div className="flex items-center gap-1 bg-white dark:bg-slate-700/80 p-1 rounded-xl border border-slate-200 dark:border-slate-600 shrink-0">
+                          <div className="flex items-center gap-2.5 shrink-0">
+                            {/* Quantity Steppers */}
+                            <div className="flex items-center gap-1.5 bg-stone-100 dark:bg-stone-800 p-1 rounded-xl border border-stone-200 dark:border-stone-700">
+                              <button
+                                type="button"
+                                onClick={() => onUpdateDraftQuantity(item.cardId, -1)}
+                                className="w-7 h-7 rounded-lg bg-white dark:bg-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-600 flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
+                              >
+                                {item.quantity === 1 ? (
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                                ) : (
+                                  <Minus className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+
+                              <span className="w-7 text-center font-mono font-black text-sm text-stone-900 dark:text-white">
+                                {item.quantity}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => onUpdateDraftQuantity(item.cardId, 1)}
+                                className="w-7 h-7 rounded-lg bg-white dark:bg-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-600 flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {/* Hide / Show Barcode Toggle Button */}
                             <button
                               type="button"
-                              onClick={() => onUpdateDraftQuantity(item.cardId, -1)}
-                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors shadow-2xs cursor-pointer"
+                              onClick={() => toggleBarcodeVisibility(item.cardId)}
+                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                                isHidden
+                                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
+                                  : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-750'
+                              }`}
+                              title={isHidden ? 'Show barcode again' : 'Hide barcode after scanning'}
                             >
-                              {item.quantity === 1 ? (
-                                <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+                              {isHidden ? (
+                                <>
+                                  <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                  <span>Show Barcode</span>
+                                </>
                               ) : (
-                                <Minus className="w-3.5 h-3.5" />
+                                <>
+                                  <EyeOff className="w-3.5 h-3.5 text-stone-500" />
+                                  <span>Hide Barcode</span>
+                                </>
                               )}
-                            </button>
-
-                            <span className="w-6 text-center font-mono font-bold text-xs text-slate-900 dark:text-white">
-                              {item.quantity}
-                            </span>
-
-                            <button
-                              type="button"
-                              onClick={() => onUpdateDraftQuantity(item.cardId, 1)}
-                              className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors shadow-2xs cursor-pointer"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
 
-                        {/* Category Barcode Below Item (Reference Sheet Style) */}
-                        <CategoryBarcode
-                          categoryName={barcodeData.name}
-                          barcodeNumber={barcodeData.code}
-                        />
+                        {/* Barcode Area: Hidden Banner OR High-Visibility Spaced Barcode */}
+                        {isHidden ? (
+                          <div className="mt-3 py-2.5 px-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300 animate-in fade-in duration-100">
+                            <div className="flex items-center gap-2 font-bold">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                              <span>Scanned · Barcode Hidden</span>
+                            </div>
+                            <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
+                              Scanner will not trigger this item
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="pt-3">
+                            <CategoryBarcode
+                              categoryName={barcodeData.name}
+                              barcodeNumber={barcodeData.code}
+                            />
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -292,8 +375,8 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
                     type="text"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Observação do pedido (opcional)..."
-                    className="w-full px-3.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500"
+                    placeholder="Table notes / special requests (optional)..."
+                    className="w-full px-4 py-2.5 bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-xs sm:text-sm text-stone-900 dark:text-white placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 shadow-2xs"
                   />
                 </div>
               </>
@@ -301,32 +384,37 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
           </div>
 
           {/* FLOATING SEND BUTTON: ALWAYS VISIBLE AT BOTTOM */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-slate-900 dark:via-slate-900/95 dark:to-transparent pt-6 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-stone-900 dark:via-stone-900/95 dark:to-transparent pt-6 border-t border-stone-100 dark:border-stone-800/80">
             <button
               type="button"
               onClick={handleOpenBuzzerModal}
               disabled={draftItems.length === 0}
-              className={`w-full py-3.5 px-5 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all shadow-xl cursor-pointer ${
+              className={`w-full py-4 px-6 rounded-2xl font-black text-base sm:text-lg flex items-center justify-center gap-2.5 transition-all shadow-xl cursor-pointer ${
                 draftItems.length > 0
-                  ? 'bg-orange-600 hover:bg-orange-500 text-white shadow-orange-600/30 hover:scale-[1.01] active:scale-98 ring-2 ring-orange-500/40'
-                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-75'
+                  ? 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/30 hover:scale-[1.01] active:scale-98 ring-2 ring-amber-400/40'
+                  : 'bg-stone-200 dark:bg-stone-800 text-stone-400 dark:text-stone-500 cursor-not-allowed opacity-75'
               }`}
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-5 h-5 text-stone-950" />
               <span>
-                Enviar Pedido {totalItemsCount > 0 ? `(${totalItemsCount})` : ''}
+                Send Order {totalItemsCount > 0 ? `(${totalItemsCount})` : ''}
               </span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* BUZZER MODAL: Numeric-only on touchscreen, defaults to 000 if empty */}
+      {/* BUZZER MODAL: Digital (Mobile QR) & Physical Modes */}
       <BuzzerModal
         isOpen={isBuzzerModalOpen}
         onClose={() => setIsBuzzerModalOpen(false)}
         onConfirm={handleConfirmBuzzer}
         itemCount={totalItemsCount}
+        existingOrders={existingOrders}
+        draftOrderPayload={{
+          items: draftItems,
+          notes,
+        }}
       />
     </div>
   );

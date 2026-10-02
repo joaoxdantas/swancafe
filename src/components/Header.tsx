@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, Activity, Volume2, VolumeX, Sparkles, SlidersHorizontal, Plus, Moon, Sun, Maximize2 } from 'lucide-react';
+import { Layers, Activity, Volume2, VolumeX, Sparkles, SlidersHorizontal, Plus, Moon, Sun, Maximize2, Coffee } from 'lucide-react';
 import { sounds } from '../utils/helpers';
 
 interface HeaderProps {
@@ -32,17 +32,17 @@ export const Header: React.FC<HeaderProps> = ({
   const activeOrdersTotal = queueCount + ovenCount;
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-xs transition-colors">
+    <header className="sticky top-0 z-30 bg-white/95 dark:bg-stone-950/95 backdrop-blur-md border-b border-stone-200 dark:border-stone-800 shadow-xs transition-colors">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3 sm:gap-4">
         {/* Brand / Logo */}
         <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-lg shadow-sm shadow-orange-500/20 dark:shadow-orange-500/40">
-            OF
+          <div className="w-10 h-10 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold text-lg shadow-sm shadow-amber-500/20 dark:shadow-amber-500/40">
+            <Coffee className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
-                OrderFlow
+              <h1 className="text-base sm:text-lg font-bold text-stone-900 dark:text-white tracking-tight leading-tight">
+                OrderFlow Cafe
               </h1>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/60">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* 3 Tabs Switcher: Cards, Tracking, Menu Edit */}
-        <nav className="flex items-center p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800">
+        <nav className="flex items-center p-1 bg-stone-100 dark:bg-stone-900 rounded-xl border border-stone-200/80 dark:border-stone-800">
           <button
             type="button"
             onClick={() => {
@@ -62,12 +62,12 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 cursor-pointer ${
               activeTab === 'cards'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/60'
+                ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-xs font-bold'
+                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-200/50 dark:hover:bg-stone-800/60'
             }`}
           >
-            <Layers className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-            <span>Cards</span>
+            <Layers className="w-4 h-4 text-stone-500 dark:text-stone-400" />
+            <span>Menu Cards</span>
           </button>
 
           <button
@@ -78,14 +78,14 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className={`relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 cursor-pointer ${
               activeTab === 'tracking'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/60'
+                ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-xs font-bold'
+                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-200/50 dark:hover:bg-stone-800/60'
             }`}
           >
-            <Activity className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-            <span>Tracking</span>
+            <Activity className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <span>Kitchen Tracking</span>
             {activeOrdersTotal > 0 && (
-              <span className="flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] font-black rounded-full bg-orange-500 dark:bg-orange-500 text-white shadow-xs">
+              <span className="flex items-center justify-center min-w-5 h-5 px-1.5 text-[11px] font-black rounded-full bg-amber-500 text-stone-950 shadow-xs">
                 {activeOrdersTotal}
               </span>
             )}
@@ -99,12 +99,12 @@ export const Header: React.FC<HeaderProps> = ({
             }}
             className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-lg transition-all duration-150 cursor-pointer ${
               activeTab === 'menu-edit'
-                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/60'
+                ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-xs font-bold'
+                : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-stone-200/50 dark:hover:bg-stone-800/60'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-            <span>Menu Edit</span>
+            <span>Menu Editor</span>
           </button>
         </nav>
 
@@ -118,19 +118,19 @@ export const Header: React.FC<HeaderProps> = ({
               setDarkMode(next);
               sounds.playPop();
             }}
-            title={darkMode ? 'Alternar para Modo Claro' : 'Alternar para Modo Escuro'}
-            aria-label={darkMode ? 'Alternar para Modo Claro' : 'Alternar para Modo Escuro'}
-            className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200/80 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 shadow-2xs"
+            title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 bg-stone-100 dark:bg-stone-900 hover:bg-stone-200/80 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 shadow-2xs"
           >
             {darkMode ? (
               <>
                 <Sun className="w-4 h-4 text-amber-400" />
-                <span className="hidden md:inline">Claro</span>
+                <span className="hidden md:inline">Light</span>
               </>
             ) : (
               <>
-                <Moon className="w-4 h-4 text-slate-600" />
-                <span className="hidden md:inline">Escuro</span>
+                <Moon className="w-4 h-4 text-stone-600" />
+                <span className="hidden md:inline">Dark</span>
               </>
             )}
           </button>
@@ -139,11 +139,11 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onToggleFullScreen}
-              title="Abrir em Tela Cheia (Duas Colunas)"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 hover:bg-amber-200 dark:hover:bg-amber-900 border border-amber-300/80 dark:border-amber-700/60 rounded-xl transition-all cursor-pointer shadow-2xs"
+              title="Open Full Screen Mode"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-amber-900 dark:text-amber-300 bg-amber-100/90 dark:bg-amber-950/70 hover:bg-amber-200 dark:hover:bg-amber-900 border border-amber-300/80 dark:border-amber-700/60 rounded-xl transition-all cursor-pointer shadow-2xs"
             >
               <Maximize2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span className="hidden sm:inline">Tela Cheia</span>
+              <span className="hidden sm:inline">Full Screen</span>
             </button>
           )}
 
@@ -151,7 +151,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               type="button"
               onClick={onOpenAddModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 dark:bg-indigo-600 dark:hover:bg-indigo-500 rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-xs transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add Item</span>
@@ -162,11 +162,11 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             type="button"
             onClick={onQuickDemoOrder}
-            title="Enviar pedido de teste rápido"
-            className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-800 transition-colors cursor-pointer"
+            title="Send quick demo order ticket"
+            className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white bg-stone-100 dark:bg-stone-900 hover:bg-stone-200/70 dark:hover:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-800 transition-colors cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Teste</span>
+            <span>Demo</span>
           </button>
 
           <button
@@ -177,13 +177,13 @@ export const Header: React.FC<HeaderProps> = ({
               setSoundEnabled(next);
               if (next) sounds.playPop();
             }}
-            title={soundEnabled ? 'Silenciar sons' : 'Ativar sons'}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg border border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-colors cursor-pointer"
+            title={soundEnabled ? 'Mute sound' : 'Enable sound'}
+            className="p-2 text-stone-500 dark:text-stone-400 hover:text-stone-800 dark:hover:text-white hover:bg-stone-100 dark:hover:bg-stone-900 rounded-lg border border-transparent hover:border-stone-200 dark:hover:border-stone-800 transition-colors cursor-pointer"
           >
             {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+              <Volume2 className="w-4 h-4 text-stone-600 dark:text-stone-300" />
             ) : (
-              <VolumeX className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+              <VolumeX className="w-4 h-4 text-stone-400 dark:text-stone-500" />
             )}
           </button>
         </div>

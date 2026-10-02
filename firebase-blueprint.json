@@ -2,11 +2,15 @@
   "entities": {
     "Order": {
       "title": "Order",
-      "description": "A live kitchen order associated with a buzzer number and tracked across Queue, Oven, and Delivered stages.",
+      "description": "A live kitchen order associated with a physical or digital buzzer number (200-299 for digital) and tracked across Queue, Oven, and Delivered stages.",
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },
         "buzzerNumber": { "type": "string", "maxLength": 32 },
+        "isDigitalBuzzer": { "type": "boolean" },
+        "scannedAt": { "type": "number" },
+        "buzzedAt": { "type": "number" },
+        "completedAt": { "type": "number" },
         "stage": { "type": "string", "enum": ["queue", "oven", "delivered"] },
         "notes": { "type": "string", "maxLength": 500 },
         "queuedAt": { "type": "number" },
@@ -19,7 +23,7 @@
     },
     "CardItem": {
       "title": "CardItem",
-      "description": "A selectable pizza or food item card with initials and color branding.",
+      "description": "A selectable cafe or food item card with initials and color branding.",
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128 },

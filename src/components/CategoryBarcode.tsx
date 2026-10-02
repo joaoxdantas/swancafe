@@ -14,7 +14,7 @@ export const CategoryBarcode: React.FC<CategoryBarcodeProps> = ({
   className = '',
   showDigitsBelow = false,
 }) => {
-  const cleanNumber = (barcodeNumber || '1796938').trim() || '1796938';
+  const cleanNumber = (barcodeNumber || '0338447').trim() || '0338447';
   const cleanName = (categoryName || 'LUNCH').toUpperCase().trim();
 
   // Generate mathematically exact ISO/IEC 15417 Code 128 barcode vectors

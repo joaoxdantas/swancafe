@@ -4,6 +4,7 @@ import {
   INITIAL_CARDS,
   DEFAULT_CATEGORIES,
   DEFAULT_CATEGORY_COLORS,
+  DEFAULT_CATEGORY_BARCODES,
   getCategoryColorScheme,
   sounds,
   COLOR_PALETTES,
@@ -16,6 +17,7 @@ import { MenuEditTab } from './components/MenuEditTab';
 import { CardEditModal } from './components/CardEditModal';
 import { OrderComposer } from './components/OrderComposer';
 import { FullScreenOrderView } from './components/FullScreenOrderView';
+import { CustomerBuzzerView } from './components/CustomerBuzzerView';
 import { Check, Layers, Activity, SlidersHorizontal } from 'lucide-react';
 import {
   testConnection,
@@ -40,11 +42,35 @@ const STORAGE_KEY_ORDERS = 'orderflow_orders_v4';
 const STORAGE_KEY_COUNTER = 'orderflow_buzzer_counter_v4';
 const STORAGE_KEY_CATEGORIES = 'orderflow_categories_v4';
 const STORAGE_KEY_CATEGORY_COLORS = 'orderflow_category_colors_v4';
+const STORAGE_KEY_CATEGORY_BARCODES = 'orderflow_category_barcodes_v5';
 
 export default function App() {
+  // Check if opened via Customer Digital Buzzer QR code (?view=buzzer&orderId=...)
+  const [buzzerParams] = useState(() => {
+    if (typeof window === 'undefined') return { isBuzzerView: false, orderId: '', buzzerNumber: '' };
+    const sp = new URLSearchParams(window.location.search);
+    const view = sp.get('view');
+    const orderId = sp.get('orderId');
+    const buzzer = sp.get('buzzer') || '200';
+    return {
+      isBuzzerView: view === 'buzzer' && Boolean(orderId),
+      orderId: orderId || '',
+      buzzerNumber: buzzer,
+    };
+  });
+
+  if (buzzerParams.isBuzzerView) {
+    return (
+      <CustomerBuzzerView
+        orderId={buzzerParams.orderId}
+        initialBuzzerNumber={buzzerParams.buzzerNumber}
+      />
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<'cards' | 'tracking' | 'menu-edit'>('cards');
 
-  // Group / Category Colors Map (e.g. Salada -> emerald/green, Pizza -> orange)
+  // Group / Category Colors Map (e.g. Salads -> emerald/green, Pizzas -> orange)
   const [categoryColors, setCategoryColors] = useState<Record<string, string>>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_CATEGORY_COLORS);
@@ -57,6 +83,36 @@ export default function App() {
     }
     return DEFAULT_CATEGORY_COLORS;
   });
+
+  // Group / Category Barcodes Map (Lunch -> 0338447, Salad -> 0986216, Hot Meal -> 0342515, etc.)
+  const [categoryBarcodes, setCategoryBarcodes] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_CATEGORY_BARCODES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed === 'object' && parsed !== null) {
+          return {
+            ...DEFAULT_CATEGORY_BARCODES,
+            ...parsed,
+            Lunch: '0338447',
+            LUNCH: '0338447',
+            Almoço: '0338447',
+          };
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return DEFAULT_CATEGORY_BARCODES;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_CATEGORY_BARCODES, JSON.stringify(categoryBarcodes));
+    } catch {
+      // ignore
+    }
+  }, [categoryBarcodes]);
 
   // Categories State
   const [categories, setCategories] = useState<string[]>(() => {
@@ -374,7 +430,30 @@ export default function App() {
           if (hasNewIncoming) {
             sounds.playBell();
           }
-          return cloudOrders;
+
+          // Protect recent local optimistic stage transitions against stale in-flight snapshot echoes
+          const now = Date.now();
+          const merged = cloudOrders.map((cloudOrder) => {
+            const local = prevMap.get(cloudOrder.id);
+            if (!local) return cloudOrder;
+
+            // If local was recently moved (to 'oven' or 'delivered') within 6s and cloud has not caught up
+            if (local.stage !== cloudOrder.stage) {
+              const localTimestamp = Math.max(local.ovenAt || 0, local.deliveredAt || 0);
+              const cloudTimestamp = Math.max(cloudOrder.ovenAt || 0, cloudOrder.deliveredAt || 0);
+              if (localTimestamp > cloudTimestamp && now - localTimestamp < 6000) {
+                return {
+                  ...cloudOrder,
+                  stage: local.stage,
+                  ovenAt: local.ovenAt || cloudOrder.ovenAt,
+                  deliveredAt: local.deliveredAt || cloudOrder.deliveredAt,
+                };
+              }
+            }
+            return cloudOrder;
+          });
+
+          return merged;
         });
       } else {
         isInitialLoad = false;
@@ -457,18 +536,63 @@ export default function App() {
   };
 
   // Dispatch current buzzer draft to kitchen queue
-  const handleSendDraftOrder = (notes?: string, buzzerOverride?: string) => {
-    if (draftItems.length === 0) return;
+  const handleSendDraftOrder = (
+    notes?: string,
+    buzzerOverride?: string,
+    isDigital?: boolean,
+    existingOrderId?: string
+  ) => {
+    if (draftItems.length === 0 && !existingOrderId) return;
 
     const rawBuzzer = (buzzerOverride !== undefined ? buzzerOverride : buzzerNumber).trim().replace(/#/g, '');
     const cleanBuzzer = rawBuzzer || '000';
+    const totalCount = draftItems.reduce((acc, it) => acc + it.quantity, 0);
+
+    if (existingOrderId) {
+      // Ensure order is in local state immediately so kitchen tracking is instant
+      setOrders((prev) => {
+        if (prev.some((o) => o.id === existingOrderId)) return prev;
+        const now = Date.now();
+        const primaryItem = draftItems[0];
+        const newOrder: OrderItem = {
+          id: existingOrderId,
+          buzzerNumber: cleanBuzzer,
+          isDigitalBuzzer: true,
+          items: draftItems,
+          cardId: primaryItem?.cardId,
+          cardName: primaryItem?.cardName,
+          initials: primaryItem?.initials,
+          colorScheme: primaryItem?.colorScheme,
+          stage: 'queue',
+          notes,
+          createdAt: now,
+          queuedAt: now,
+        };
+        return [newOrder, ...prev];
+      });
+
+      setDraftItems([]);
+      setToastMessage({
+        text: `Digital Buzzer #${cleanBuzzer} connected! Order sent to kitchen queue.`,
+        actionText: 'View Tracking ➔',
+        onAction: () => {
+          setActiveTab('tracking');
+          setToastMessage(null);
+        },
+      });
+      setTimeout(() => {
+        setToastMessage((current) => (current?.text.includes(cleanBuzzer) ? null : current));
+      }, 4500);
+      return;
+    }
+
     const now = Date.now();
     const primaryItem = draftItems[0];
-    const totalCount = draftItems.reduce((acc, it) => acc + it.quantity, 0);
 
     const newOrder: OrderItem = {
       id: `ord-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       buzzerNumber: cleanBuzzer,
+      isDigitalBuzzer: Boolean(isDigital),
       items: draftItems,
       cardId: primaryItem.cardId,
       cardName: primaryItem.cardName,
@@ -490,10 +614,10 @@ export default function App() {
       setBuzzerNumber(String(parsed + 1));
     }
 
-    // Confirmation Toast (NO #)
+    // Confirmation Toast
     setToastMessage({
-      text: `Buzzer ${cleanBuzzer} enviado para a Fila com ${totalCount} item(s)!`,
-      actionText: 'Ver Tracking ➔',
+      text: `Buzzer #${cleanBuzzer} sent to Kitchen Queue with ${totalCount} item(s)!`,
+      actionText: 'View Tracking ➔',
       onAction: () => {
         setActiveTab('tracking');
         setToastMessage(null);
@@ -518,7 +642,7 @@ export default function App() {
     setCategories((prev) => [...prev, trimmed]);
     setCategoryColors((prev) => ({ ...prev, [trimmed]: catColor }));
     syncAddCategory(trimmed, catColor);
-    setToastMessage({ text: `Grupo "${trimmed}" criado com sucesso.` });
+    setToastMessage({ text: `Category "${trimmed}" created successfully.` });
     setTimeout(() => setToastMessage(null), 3000);
   };
 
@@ -534,7 +658,7 @@ export default function App() {
     });
 
     syncUpdateCategoryColor(catName, colorId);
-    setToastMessage({ text: `Cor do grupo "${catName}" alterada com sucesso.` });
+    setToastMessage({ text: `Color for "${catName}" updated successfully.` });
     setTimeout(() => setToastMessage(null), 3000);
   };
 
@@ -567,7 +691,7 @@ export default function App() {
     }
 
     setToastMessage({
-      text: `Grupo renomeado para "${trimmed}".`,
+      text: `Category renamed to "${trimmed}".`,
     });
     setTimeout(() => setToastMessage(null), 3000);
   };
@@ -594,7 +718,7 @@ export default function App() {
       setSelectedCategory('All');
     }
 
-    setToastMessage({ text: `Grupo "${catName}" removido.` });
+    setToastMessage({ text: `Category "${catName}" removed.` });
     setTimeout(() => setToastMessage(null), 3000);
   };
 
@@ -608,8 +732,8 @@ export default function App() {
         syncSaveCard(updated);
         setToastMessage({
           text: newStatus
-            ? `Ativado: "${c.name}" visível na aba Cards.`
-            : `Desativado: "${c.name}" ocultado da aba Cards.`,
+            ? `Activated: "${c.name}" visible on menu.`
+            : `Deactivated: "${c.name}" hidden from menu.`,
         });
         setTimeout(() => setToastMessage(null), 3500);
         return updated;
@@ -624,13 +748,13 @@ export default function App() {
     const newCard: CardItem = {
       ...card,
       id: `card-${Date.now()}`,
-      name: `${card.name} (Cópia)`,
+      name: `${card.name} (Copy)`,
       colorScheme: groupScheme,
       createdAt: Date.now(),
     };
     setCards((prev) => [newCard, ...prev]);
     syncSaveCard(newCard);
-    setToastMessage({ text: `Duplicado: "${card.name}".` });
+    setToastMessage({ text: `Duplicated: "${card.name}".` });
     setTimeout(() => setToastMessage(null), 3000);
   };
 
@@ -672,7 +796,7 @@ export default function App() {
       );
       syncSaveCard(updatedCard);
       setToastMessage({
-        text: `Atualizado card "${cardData.name}" [${cardData.initials}]`,
+        text: `Updated card "${cardData.name}" [${cardData.initials}]`,
       });
     } else {
       const newCard: CardItem = {
@@ -684,7 +808,7 @@ export default function App() {
       setCards((prev) => [newCard, ...prev]);
       syncSaveCard(newCard);
       setToastMessage({
-        text: `Adicionado card "${newCard.name}" [${newCard.initials}]`,
+        text: `Added card "${newCard.name}" [${newCard.initials}]`,
       });
     }
     setTimeout(() => setToastMessage(null), 3500);
@@ -819,6 +943,7 @@ export default function App() {
               cards={cards}
               categories={categories}
               categoryColors={categoryColors}
+              categoryBarcodes={categoryBarcodes}
               draftItems={draftItems}
               onSelectCard={handleSelectCard}
               onUpdateDraftQuantity={handleUpdateDraftQuantity}
@@ -838,6 +963,7 @@ export default function App() {
               setSoundEnabled={setSoundEnabled}
               darkMode={darkMode}
               setDarkMode={setDarkMode}
+              existingOrders={orders}
             />
           ) : (
             <div>
@@ -852,6 +978,7 @@ export default function App() {
                 availableCards={cards.filter((c) => c.isActive !== false)}
                 onAddCardToDraft={handleSelectCard}
                 onToggleFullScreen={handleToggleFullScreen}
+                existingOrders={orders}
               />
 
               {/* Cards Grid */}
@@ -859,6 +986,7 @@ export default function App() {
                 cards={cards}
                 categories={categories}
                 categoryColors={categoryColors}
+                categoryBarcodes={categoryBarcodes}
                 draftItems={draftItems}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}

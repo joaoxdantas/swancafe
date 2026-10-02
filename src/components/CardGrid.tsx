@@ -54,10 +54,10 @@ export const CardItemView: React.FC<CardItemViewProps> = ({
           : 'p-3.5 sm:p-4 rounded-xl border-2 min-h-[135px] sm:min-h-[145px]'
       } transition-all duration-200 select-none text-left overflow-hidden ${
         !isCardActive
-          ? 'opacity-40 grayscale cursor-not-allowed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50'
+          ? 'opacity-40 grayscale cursor-not-allowed border-stone-300 dark:border-stone-750 bg-stone-50 dark:bg-stone-850/50'
           : draftQuantity > 0
-          ? `${colorScheme.border} bg-white dark:bg-slate-800 ring-3 ${colorScheme.ring} shadow-sm cursor-pointer`
-          : `${colorScheme.border} bg-white dark:bg-slate-800 hover:shadow-md hover:scale-[1.01] cursor-pointer`
+          ? `${colorScheme.border} bg-white dark:bg-stone-850 ring-3 ${colorScheme.ring} shadow-sm cursor-pointer`
+          : `${colorScheme.border} bg-white dark:bg-stone-850 hover:shadow-md hover:scale-[1.01] cursor-pointer`
       }`}
     >
       {/* Soft background tint in top area */}
@@ -68,26 +68,26 @@ export const CardItemView: React.FC<CardItemViewProps> = ({
       {/* Top Header: Draft quantity counter & Item Reference Number */}
       <div className="flex items-center justify-between z-10 w-full min-h-[20px] gap-1">
         {draftQuantity > 0 ? (
-          <span className="flex items-center px-2 py-0.5 rounded-full text-[11px] font-black bg-orange-600 dark:bg-orange-500 text-white shadow-2xs animate-in zoom-in-50">
+          <span className="flex items-center px-2 py-0.5 rounded-full text-[11px] font-black bg-amber-600 dark:bg-amber-500 text-white shadow-2xs animate-in zoom-in-50">
             x{draftQuantity}
           </span>
         ) : (
           <span
-            className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-750 px-1.5 py-0.5 rounded tracking-wider truncate max-w-[110px]"
-            title={`Referência: ${barcodeData.code} (${card.category || 'Item'})`}
+            className="text-[10px] font-mono font-bold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded tracking-wider truncate max-w-[110px]"
+            title={`Reference Barcode: ${barcodeData.code} (${card.category || 'Item'})`}
           >
             Ref {barcodeData.code}
           </span>
         )}
 
         {!isCardActive ? (
-          <span className="text-[10px] font-bold text-slate-500 bg-slate-200 dark:bg-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-bold text-stone-500 bg-stone-200 dark:bg-stone-700 dark:text-stone-300 px-2 py-0.5 rounded-full">
             Off
           </span>
         ) : draftQuantity > 0 ? (
           <span
-            className="text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-750 px-1.5 py-0.5 rounded tracking-wider"
-            title={`Referência: ${barcodeData.code}`}
+            className="text-[10px] font-mono font-bold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 rounded tracking-wider"
+            title={`Reference Barcode: ${barcodeData.code}`}
           >
             Ref {barcodeData.code}
           </span>
@@ -116,9 +116,9 @@ export const CardItemView: React.FC<CardItemViewProps> = ({
       </div>
 
       {/* Bottom: Item Name + Plus Button */}
-      <div className="z-10 pt-1.5 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between gap-1.5">
+      <div className="z-10 pt-1.5 border-t border-stone-100 dark:border-stone-800 flex items-center justify-between gap-1.5">
         <span
-          className="text-xs font-bold text-slate-800 dark:text-white truncate"
+          className="text-xs font-bold text-stone-800 dark:text-white truncate"
           title={card.name}
         >
           {card.name}
@@ -126,8 +126,8 @@ export const CardItemView: React.FC<CardItemViewProps> = ({
         <div
           className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} rounded-full flex items-center justify-center transition-all shrink-0 ${
             draftQuantity > 0
-              ? 'bg-orange-500 text-white shadow-2xs'
-              : 'bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white group-hover:bg-slate-200 dark:group-hover:bg-slate-600'
+              ? 'bg-amber-500 text-stone-950 shadow-2xs'
+              : 'bg-stone-100 dark:bg-stone-750 border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-300 group-hover:text-stone-900 dark:group-hover:text-white group-hover:bg-stone-200 dark:group-hover:bg-stone-700'
           }`}
         >
           <Plus className={compact ? 'w-3 h-3' : 'w-3.5 h-3.5'} />
@@ -234,7 +234,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
     // Catch any items without defined category
     const remaining = processedCards.filter((c) => !usedIds.has(c.id));
     if (remaining.length > 0) {
-      groups.push({ category: 'Outros', cards: remaining });
+      groups.push({ category: 'Other Items', cards: remaining });
     }
 
     return groups;
@@ -248,12 +248,12 @@ export const CardGrid: React.FC<CardGridProps> = ({
   return (
     <div className="space-y-5">
       {/* Action Header & Tools Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/80 dark:border-stone-800">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Cardápio
+          <h2 className="text-xl font-bold text-stone-900 dark:text-white tracking-tight">
+            Menu Cards
           </h2>
-          <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+          <span className="text-xs font-mono font-bold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-md">
             {processedCards.length}
           </span>
         </div>
@@ -268,20 +268,20 @@ export const CardGrid: React.FC<CardGridProps> = ({
                 sounds.playPop();
                 setGroupByType(!groupByType);
               }}
-              title={groupByType ? 'Ver em grade contínua' : 'Agrupar por tipo / categoria'}
+              title={groupByType ? 'View continuous grid' : 'Group by category'}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-colors cursor-pointer ${
                 groupByType
-                  ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 border-slate-900 dark:border-white shadow-2xs'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 border-stone-900 dark:border-white shadow-2xs'
+                  : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
               }`}
             >
               {groupByType ? <Layers className="w-3.5 h-3.5" /> : <LayoutGrid className="w-3.5 h-3.5" />}
-              <span>{groupByType ? 'Agrupado por Tipo' : 'Grade Única'}</span>
+              <span>{groupByType ? 'Grouped by Category' : 'Flat Grid'}</span>
             </button>
           )}
 
-          {/* Sort: A-Z / Z-A / Padrão */}
-          <div className="flex items-center bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-0.5">
+          {/* Sort: A-Z / Z-A / Default */}
+          <div className="flex items-center bg-white dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700 p-0.5">
             <button
               type="button"
               onClick={() => {
@@ -290,11 +290,11 @@ export const CardGrid: React.FC<CardGridProps> = ({
               }}
               className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                 sortMode === 'default'
-                  ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-stone-100 dark:bg-stone-700 text-stone-900 dark:text-white'
+                  : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
               }`}
             >
-              Padrão
+              Default
             </button>
 
             <button
@@ -303,11 +303,11 @@ export const CardGrid: React.FC<CardGridProps> = ({
                 sounds.playPop();
                 setSortMode(sortMode === 'az' ? 'za' : 'az');
               }}
-              title={sortMode === 'az' ? 'Ordem Z-A' : 'Ordem A-Z'}
+              title={sortMode === 'az' ? 'Sort Z to A' : 'Sort A to Z'}
               className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                 sortMode === 'az' || sortMode === 'za'
-                  ? 'bg-orange-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-amber-500 text-stone-950 shadow-2xs font-bold'
+                  : 'text-stone-500 dark:text-stone-400 hover:text-stone-900 dark:hover:text-white'
               }`}
             >
               {sortMode === 'za' ? (
@@ -331,12 +331,12 @@ export const CardGrid: React.FC<CardGridProps> = ({
               onClick={() => setShowInactive(!showInactive)}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-colors cursor-pointer ${
                 showInactive
-                  ? 'bg-slate-800 dark:bg-slate-700 text-white border-slate-800 dark:border-slate-600'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700'
+                  ? 'bg-stone-800 dark:bg-stone-700 text-white border-stone-800 dark:border-stone-600'
+                  : 'bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-700'
               }`}
             >
               {showInactive ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{showInactive ? 'Ocultar Desativados' : `Desativados (${inactiveCardsCount})`}</span>
+              <span>{showInactive ? 'Hide Inactive' : `Inactive (${inactiveCardsCount})`}</span>
             </button>
           )}
 
@@ -347,32 +347,32 @@ export const CardGrid: React.FC<CardGridProps> = ({
             className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
-            <span>Editar Grupos</span>
+            <span>Edit Categories</span>
           </button>
         </div>
       </div>
 
-      {/* Filter / Search Bar & Category Pills */}
+      {/* Filter / Search Bar & Category Tabs */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-xs sm:max-w-sm">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar..."
-            className="w-full pl-3.5 pr-8 py-2 bg-white dark:bg-slate-800 text-sm border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/30 focus:border-orange-500 placeholder:text-slate-400 dark:placeholder:text-slate-400 text-slate-900 dark:text-white"
+            placeholder="Search menu items..."
+            className="w-full pl-3.5 pr-8 py-2 bg-white dark:bg-stone-800 text-sm border border-stone-200 dark:border-stone-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 placeholder:text-stone-400 dark:placeholder:text-stone-500 text-stone-900 dark:text-white"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 cursor-pointer"
             >
-              Limpar
+              Clear
             </button>
           )}
         </div>
 
-        {/* Categories pill list */}
+        {/* Categories list */}
         {allCategoryTabs.length > 2 && (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
             {allCategoryTabs.map((cat) => {
@@ -385,8 +385,8 @@ export const CardGrid: React.FC<CardGridProps> = ({
                   onClick={() => setSelectedCategory(cat)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
                     selectedCategory === cat
-                      ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-xs'
-                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                      ? 'bg-stone-900 dark:bg-white text-white dark:text-stone-950 shadow-xs'
+                      : 'bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700'
                   }`}
                 >
                   {catScheme && (
@@ -412,15 +412,15 @@ export const CardGrid: React.FC<CardGridProps> = ({
               return (
                 <div key={grp.category} className="space-y-3">
                   {/* Category Type Header */}
-                  <div className="flex items-center gap-2 pt-1 border-b border-slate-200/60 dark:border-slate-800 pb-1.5">
+                  <div className="flex items-center gap-2 pt-1 border-b border-stone-200/60 dark:border-stone-800 pb-1.5">
                     <span
                       className="w-3 h-3 rounded-full shadow-2xs shrink-0"
                       style={{ backgroundColor: catScheme.hex }}
                     />
-                    <h3 className="text-sm font-bold tracking-wider uppercase text-slate-800 dark:text-slate-200">
+                    <h3 className="text-sm font-bold tracking-wider uppercase text-stone-800 dark:text-stone-200">
                       {grp.category}
                     </h3>
-                    <span className="text-xs font-mono font-semibold text-slate-400">
+                    <span className="text-xs font-mono font-semibold text-stone-400">
                       ({grp.cards.length})
                     </span>
                   </div>
@@ -450,9 +450,9 @@ export const CardGrid: React.FC<CardGridProps> = ({
             })}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-8">
-            <p className="text-slate-500 dark:text-slate-300 text-sm">
-              Nenhum card encontrado.
+          <div className="text-center py-12 bg-white dark:bg-stone-850 rounded-2xl border border-stone-200/80 dark:border-stone-800 p-8">
+            <p className="text-stone-500 dark:text-stone-300 text-sm">
+              No menu items found.
             </p>
           </div>
         )
@@ -479,9 +479,9 @@ export const CardGrid: React.FC<CardGridProps> = ({
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/80 dark:border-slate-700 p-8">
-            <p className="text-slate-500 dark:text-slate-300 text-sm">
-              Nenhum card encontrado.
+          <div className="text-center py-12 bg-white dark:bg-stone-850 rounded-2xl border border-stone-200/80 dark:border-stone-800 p-8">
+            <p className="text-stone-500 dark:text-stone-300 text-sm">
+              No menu items found.
             </p>
           </div>
         )

@@ -34,6 +34,10 @@ export interface OrderItemLine {
 export interface OrderItem {
   id: string;
   buzzerNumber: string;
+  isDigitalBuzzer?: boolean;
+  scannedAt?: number;
+  buzzedAt?: number;
+  completedAt?: number;
   items: OrderItemLine[];
   cardId?: string;
   cardName?: string;

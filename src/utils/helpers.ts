@@ -15,7 +15,7 @@ export interface CategoryColorOption {
 export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   {
     id: 'orange',
-    name: 'Laranja (Pizza)',
+    name: 'Orange (Pizzas)',
     hex: '#f97316',
     border: 'border-orange-500 dark:border-orange-500',
     ring: 'ring-orange-500/60',
@@ -26,7 +26,7 @@ export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   },
   {
     id: 'emerald',
-    name: 'Verde (Salada)',
+    name: 'Emerald (Salads)',
     hex: '#10b981',
     border: 'border-emerald-500 dark:border-emerald-400',
     ring: 'ring-emerald-500/60',
@@ -37,7 +37,7 @@ export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   },
   {
     id: 'amber',
-    name: 'Amarelo / Âmbar',
+    name: 'Amber (Sides & Chips)',
     hex: '#f59e0b',
     border: 'border-amber-500 dark:border-amber-400',
     ring: 'ring-amber-500/60',
@@ -48,7 +48,7 @@ export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   },
   {
     id: 'sky',
-    name: 'Azul (Bebidas)',
+    name: 'Sky Blue (Drinks & Coffee)',
     hex: '#0ea5e9',
     border: 'border-sky-500 dark:border-sky-400',
     ring: 'ring-sky-500/60',
@@ -59,7 +59,7 @@ export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   },
   {
     id: 'indigo',
-    name: 'Índigo (Massas)',
+    name: 'Indigo (Pasta & Mains)',
     hex: '#6366f1',
     border: 'border-indigo-500 dark:border-indigo-400',
     ring: 'ring-indigo-500/60',
@@ -70,7 +70,7 @@ export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   },
   {
     id: 'rose',
-    name: 'Vermelho / Rosa',
+    name: 'Rose (Specials)',
     hex: '#f43f5e',
     border: 'border-rose-500 dark:border-rose-400',
     ring: 'ring-rose-500/60',
@@ -81,7 +81,7 @@ export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   },
   {
     id: 'violet',
-    name: 'Roxo / Sobremesa',
+    name: 'Violet (Sweets & Pastries)',
     hex: '#8b5cf6',
     border: 'border-violet-500 dark:border-violet-400',
     ring: 'ring-violet-500/60',
@@ -92,7 +92,7 @@ export const CATEGORY_COLOR_OPTIONS: CategoryColorOption[] = [
   },
   {
     id: 'teal',
-    name: 'Verde-Água',
+    name: 'Teal (Bakery & Toast)',
     hex: '#14b8a6',
     border: 'border-teal-500 dark:border-teal-400',
     ring: 'ring-teal-500/60',
@@ -111,6 +111,14 @@ export const DEFAULT_CATEGORY_COLORS: Record<string, string> = {
   Drinks: 'sky',
   Dessert: 'violet',
   Special: 'rose',
+  'Lunch & Mains': 'orange',
+  'Fresh Salads': 'emerald',
+  'Pizzas & Focaccia': 'orange',
+  'Coffee & Drinks': 'sky',
+  'Sweets & Pastries': 'violet',
+  'Sides & Chips': 'amber',
+  'Toast & Brekkie': 'teal',
+  'Chef Specials': 'rose',
 };
 
 export function getCategoryColorScheme(
@@ -211,24 +219,43 @@ export const DEFAULT_CATEGORIES = [
 
 // Barcodes matching the reference sheet (Botanicca Shadowbook & Reference Spec)
 export const DEFAULT_CATEGORY_BARCODES: Record<string, string> = {
-  Lunch: '1796938',
-  LUNCH: '1796938',
-  Almoço: '1796938',
+  // Existing Categories Mapped Exactly to the Spreadsheet
+  Lunch: '0338447',
+  LUNCH: '0338447',
+  Almoço: '0338447',
   Salad: '0986216',
   Salada: '0986216',
   Pizza: '0342515',
   Pizzas: '0342515',
   PIZZA: '0342515',
+  'Hot Meal': '0342515',
   Sides: '0342512',
   Acompanhamentos: '0342512',
+  'Side Serve Chips - Scan 2 for Full Serve': '0342512',
+  'Chips': '0342512',
   Pasta: '0402497',
   Massas: '0402497',
-  Drinks: '9120446',
-  Bebidas: '9120446',
+  'Large Salad Hot Meal $9.50 Special': '0402497',
   Dessert: '0342890',
   Sobremesas: '0342890',
-  Special: '0338447',
-  Especiais: '0338447',
+  'All Cakes': '0342890',
+  'Cakes': '0342890',
+  Breakfast: '0338453',
+  'Café da Manhã': '0338453',
+  Special: '0402497',
+  Especiais: '0402497',
+  Drinks: '9124438',
+  Bebidas: '9124438',
+  Toast: '9124438',
+  'Muesli Fruit Yogurt': '0342514',
+  'Banana Bread': '0423430',
+  'Mini Hot Food': '0423429',
+  'Sausage Rolls': '0321384',
+  'Pies, Fillos & Scrolls': '0101253',
+  'All Pastries': '0317196',
+  'Muffins': '0890869',
+  'Clearance': '0342516',
+  'Sushi Rolls': '0507687',
   General: '0338453',
 };
 
@@ -364,6 +391,26 @@ class SoundManager {
     }
   }
 
+  // Mobile audio context unlocker: forces Web Audio pipeline to running state
+  async unlock(): Promise<boolean> {
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return false;
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      // Play 1-frame silent buffer to unlock iOS Safari audio engine
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+      return ctx.state === 'running';
+    } catch {
+      return false;
+    }
+  }
+
   playPop() {
     if (!this.enabled) return;
     try {
@@ -441,7 +488,7 @@ class SoundManager {
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, now + idx * 0.06);
-        gain.gain.setValueAtTime(0.12, now + idx * 0.06);
+        gain.gain.setValueAtTime(0.14, now + idx * 0.06);
         gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.35);
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -464,7 +511,7 @@ class SoundManager {
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(freq, now + idx * 0.1);
-        gain.gain.setValueAtTime(0.14, now + idx * 0.1);
+        gain.gain.setValueAtTime(0.16, now + idx * 0.1);
         gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.4);
         osc.connect(gain);
         gain.connect(ctx.destination);
@@ -475,6 +522,86 @@ class SoundManager {
       // ignore
     }
   }
+
+  // Loud, urgent restaurant pager alarm chime (double alert beep)
+  playBuzzerAlarm() {
+    if (!this.enabled) return;
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      const now = ctx.currentTime;
+      // 2 rapid high-pitch warning beeps with harmonics (880Hz / 1174Hz / 1318Hz)
+      const tones = [
+        { f: 880, start: 0, dur: 0.14, gain: 0.58 },
+        { f: 1174.66, start: 0.16, dur: 0.18, gain: 0.65 },
+        { f: 880, start: 0.42, dur: 0.14, gain: 0.58 },
+        { f: 1318.51, start: 0.58, dur: 0.26, gain: 0.70 },
+      ];
+      tones.forEach(({ f, start, dur, gain: vol }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f, now + start);
+        gain.gain.setValueAtTime(vol, now + start);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + start + dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + start);
+        osc.stop(now + start + dur);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  private buzzerInterval: ReturnType<typeof setInterval> | null = null;
+
+  startBuzzerLoop() {
+    this.stopBuzzerLoop();
+    this.playBuzzerAlarm();
+    this.buzzerInterval = setInterval(() => {
+      this.playBuzzerAlarm();
+    }, 1100);
+  }
+
+  stopBuzzerLoop() {
+    if (this.buzzerInterval) {
+      clearInterval(this.buzzerInterval);
+      this.buzzerInterval = null;
+    }
+  }
 }
 
 export const sounds = new SoundManager();
+
+/**
+ * Generates an available random buzzer number between 200 and 299 for digital mobile buzzers.
+ * Avoids collisions with currently active orders in queue or oven.
+ */
+export function generateDigitalBuzzerNumber(existingOrders: Array<{ buzzerNumber: string; stage: string }>): string {
+  const activeBuzzerNumbers = new Set(
+    existingOrders
+      .filter((o) => o.stage === 'queue' || o.stage === 'oven')
+      .map((o) => String(o.buzzerNumber || '').replace(/#/g, '').trim())
+  );
+
+  const available: number[] = [];
+  for (let i = 200; i <= 299; i++) {
+    const s = String(i);
+    if (!activeBuzzerNumbers.has(s)) {
+      available.push(i);
+    }
+  }
+
+  if (available.length === 0) {
+    // Fallback if all 100 are active: pick any in 200-299
+    return String(Math.floor(Math.random() * 100) + 200);
+  }
+
+  const randomIndex = Math.floor(Math.random() * available.length);
+  return String(available[randomIndex]);
+}
+

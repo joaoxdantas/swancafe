@@ -93,6 +93,10 @@ export function subscribeOrders(
           colorScheme: data.colorScheme,
           notes: data.notes || '',
           stage: data.stage || 'queue',
+          isDigitalBuzzer: Boolean(data.isDigitalBuzzer),
+          scannedAt: data.scannedAt,
+          buzzedAt: data.buzzedAt,
+          completedAt: data.completedAt,
           createdAt: data.createdAt || Date.now(),
           queuedAt: data.queuedAt || Date.now(),
           ovenAt: data.ovenAt,
@@ -110,20 +114,129 @@ export function subscribeOrders(
   );
 }
 
+export function subscribeOrderById(
+  orderId: string,
+  onData: (order: OrderItem | null) => void,
+  onError?: (err: unknown) => void
+) {
+  const path = `orders/${orderId}`;
+  return onSnapshot(
+    doc(db, 'orders', orderId),
+    (docSnap) => {
+      if (!docSnap.exists()) {
+        onData(null);
+        return;
+      }
+      const data = docSnap.data();
+      onData({
+        id: docSnap.id,
+        buzzerNumber: String(data.buzzerNumber || '1').replace(/#/g, ''),
+        isDigitalBuzzer: Boolean(data.isDigitalBuzzer),
+        scannedAt: data.scannedAt,
+        buzzedAt: data.buzzedAt,
+        completedAt: data.completedAt,
+        items: Array.isArray(data.items) ? data.items : [],
+        cardId: data.cardId,
+        cardName: data.cardName,
+        initials: data.initials,
+        colorScheme: data.colorScheme,
+        notes: data.notes || '',
+        stage: data.stage || 'queue',
+        createdAt: data.createdAt || Date.now(),
+        queuedAt: data.queuedAt || Date.now(),
+        ovenAt: data.ovenAt,
+        deliveredAt: data.deliveredAt,
+      });
+    },
+    (err) => {
+      if (onError) onError(err);
+      handleFirestoreError(err, OperationType.GET, path);
+    }
+  );
+}
+
+export async function syncMarkOrderScanned(orderId: string) {
+  const path = `orders/${orderId}`;
+  try {
+    await setDoc(
+      doc(db, 'orders', orderId),
+      {
+        scannedAt: Date.now(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, path);
+  }
+}
+
+export async function syncTriggerOrderBuzzer(orderId: string) {
+  const path = `orders/${orderId}`;
+  try {
+    await setDoc(
+      doc(db, 'orders', orderId),
+      {
+        buzzedAt: Date.now(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, path);
+  }
+}
+
+export async function syncCompleteOrder(orderId: string) {
+  const path = `orders/${orderId}`;
+  try {
+    await setDoc(
+      doc(db, 'orders', orderId),
+      {
+        completedAt: Date.now(),
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, path);
+  }
+}
+
 export async function syncSaveOrder(order: OrderItem) {
   const path = `orders/${order.id}`;
   try {
-    await setDoc(doc(db, 'orders', order.id), {
+    // Sanitize items array ensuring zero undefined fields reach Firestore
+    const cleanItems = (order.items || []).map((it) => ({
+      cardId: it.cardId || '',
+      cardName: it.cardName || '',
+      initials: it.initials || '',
+      quantity: Number(it.quantity) || 1,
+      category: it.category || 'General',
+      colorScheme: it.colorScheme || {
+        bg: 'bg-amber-50/80',
+        border: 'border-amber-500',
+        text: 'text-amber-700',
+        badge: 'bg-amber-100 text-amber-800',
+        pillBg: 'bg-amber-500',
+      },
+    }));
+
+    const docData: Record<string, unknown> = {
       id: order.id,
       buzzerNumber: order.buzzerNumber,
-      items: order.items,
+      isDigitalBuzzer: Boolean(order.isDigitalBuzzer),
+      items: cleanItems,
       stage: order.stage,
       notes: order.notes || '',
-      queuedAt: order.queuedAt,
-      createdAt: order.createdAt,
-      ...(order.ovenAt ? { ovenAt: order.ovenAt } : {}),
-      ...(order.deliveredAt ? { deliveredAt: order.deliveredAt } : {}),
-    });
+      queuedAt: order.queuedAt || Date.now(),
+      createdAt: order.createdAt || Date.now(),
+    };
+
+    if (order.scannedAt) docData.scannedAt = order.scannedAt;
+    if (order.buzzedAt) docData.buzzedAt = order.buzzedAt;
+    if (order.completedAt) docData.completedAt = order.completedAt;
+    if (order.ovenAt) docData.ovenAt = order.ovenAt;
+    if (order.deliveredAt) docData.deliveredAt = order.deliveredAt;
+
+    await setDoc(doc(db, 'orders', order.id), docData, { merge: true });
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
   }
@@ -138,9 +251,14 @@ export async function syncUpdateOrderStatus(
   try {
     const updateData: Record<string, unknown> = {
       stage: newStage,
-      ...additionalTimestamps,
     };
-    await updateDoc(doc(db, 'orders', orderId), updateData);
+    if (additionalTimestamps?.ovenAt !== undefined) {
+      updateData.ovenAt = additionalTimestamps.ovenAt;
+    }
+    if (additionalTimestamps?.deliveredAt !== undefined) {
+      updateData.deliveredAt = additionalTimestamps.deliveredAt;
+    }
+    await setDoc(doc(db, 'orders', orderId), updateData, { merge: true });
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
   }
