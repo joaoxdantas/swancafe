@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CardItem } from '../types';
-import { X, Sparkles, Trash2, Edit3, Plus } from 'lucide-react';
+import { X, Sparkles, Trash2, Edit3, Plus, Upload, Image as ImageIcon, RotateCcw } from 'lucide-react';
 import { getInitials, getCategoryColorScheme, getCategoryBarcode, sounds } from '../utils/helpers';
 import { CategoryBarcode } from './CategoryBarcode';
+import { CategoryItemIcon } from './CategoryItemIcon';
 
 interface CardEditModalProps {
   isOpen: boolean;
@@ -32,10 +33,13 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
   const [name, setName] = useState('');
   const [customInitials, setCustomInitials] = useState('');
   const [category, setCategory] = useState(safeCategories[0] || 'General');
+  const [imageUrl, setImageUrl] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [newCatInput, setNewCatInput] = useState('');
   const [isAddingNewCat, setIsAddingNewCat] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,11 +47,13 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
         setName(cardToEdit.name || '');
         setCustomInitials(cardToEdit.initials || '');
         setCategory(cardToEdit.category || safeCategories[0] || 'General');
+        setImageUrl(cardToEdit.imageUrl || '');
         setIsActive(cardToEdit.isActive !== false);
       } else {
         setName('');
         setCustomInitials('');
         setCategory(safeCategories[0] || 'General');
+        setImageUrl('');
         setIsActive(true);
       }
       setIsAddingNewCat(false);
@@ -76,6 +82,25 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
     setNewCatInput('');
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image file (PNG, JPG, SVG, WebP).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setImageUrl(reader.result);
+        sounds.playPop();
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -86,6 +111,7 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
       name: name.trim(),
       initials: computedInitials,
       category: category.trim() || 'General',
+      imageUrl: imageUrl.trim() || undefined,
       isActive,
       colorScheme: activePalette,
     });
@@ -103,20 +129,17 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
   const sampleSuggestions = [
     'Aussie Meat Pie',
     'Flat White',
-    'Brekkie Roll',
-    'Sourdough Toastie',
-    'Caesar Salad',
-    'Banana Bread',
+    'Avocado Toast',
+    'Sausage Roll',
+    'Egg & Bacon Wrap',
+    'Ham Cheese Croissant',
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 dark:bg-black/80 backdrop-blur-xs animate-in fade-in duration-150">
-      <div
-        className="w-full max-w-md bg-white dark:bg-stone-850 rounded-3xl shadow-2xl border border-stone-200 dark:border-stone-750 overflow-hidden transform transition-all"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="bg-white dark:bg-stone-850 rounded-2xl max-w-lg w-full shadow-2xl border border-stone-200 dark:border-stone-750 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-3">
+        <div className="px-6 py-4 border-b border-stone-100 dark:border-stone-750 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div
               className={`w-7 h-7 rounded-lg flex items-center justify-center ${
@@ -156,7 +179,7 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
           </div>
 
           <div
-            className={`relative p-5 rounded-2xl border-2 ${activePalette.border} bg-white dark:bg-stone-850 shadow-sm overflow-hidden flex flex-col justify-between min-h-[145px] ${
+            className={`relative p-4 sm:p-5 rounded-2xl border-2 ${activePalette.border} bg-white dark:bg-stone-850 shadow-sm overflow-hidden flex flex-col justify-between min-h-[140px] ${
               !isActive ? 'opacity-60 grayscale-30' : ''
             }`}
           >
@@ -172,15 +195,21 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
               </span>
             </div>
 
-            {/* BIG INITIALS in Group Text Color */}
-            <div className="my-2 z-10 flex flex-col items-center justify-center">
+            {/* CENTER: 1:1 FIXED PROPORTION ICON + INITIALS SIDE-BY-SIDE */}
+            <div className="my-2 z-10 flex items-center justify-center gap-3">
+              <CategoryItemIcon
+                category={category}
+                imageUrl={imageUrl}
+                itemName={name}
+                colorScheme={activePalette}
+              />
               <div
-                className={`font-black tracking-tight ${activePalette.text} font-mono text-center ${
+                className={`font-black tracking-tight ${activePalette.text} font-mono text-center leading-none ${
                   computedInitials.length <= 2
-                    ? 'text-4xl'
+                    ? 'text-3xl sm:text-4xl'
                     : computedInitials.length <= 4
-                    ? 'text-3xl'
-                    : 'text-2xl tracking-tighter'
+                    ? 'text-2xl sm:text-3xl'
+                    : 'text-xl tracking-tighter'
                 }`}
               >
                 {computedInitials}
@@ -203,7 +232,7 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
         </div>
 
         {/* Form Inputs */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[55vh] overflow-y-auto">
           {/* Active / Inactive On-Off Toggle */}
           <div className="flex items-center justify-between p-3 rounded-xl bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-750">
             <span className="text-xs font-bold text-stone-800 dark:text-stone-100">
@@ -261,6 +290,79 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
             )}
           </div>
 
+          {/* 1:1 Item Icon & Image Management */}
+          <div className="p-3.5 rounded-xl bg-stone-50 dark:bg-stone-800/80 border border-stone-200 dark:border-stone-700 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
+                <ImageIcon className="w-3.5 h-3.5 text-amber-500" />
+                <span>1:1 Item Icon / Image</span>
+              </label>
+              <span className="text-[10px] text-stone-400 font-medium">
+                1:1 Fixed Square Ratio
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* 1:1 Preview */}
+              <div className="w-12 h-12 rounded-xl border border-stone-300 dark:border-stone-600 overflow-hidden bg-white dark:bg-stone-900 shrink-0 flex items-center justify-center shadow-2xs">
+                <CategoryItemIcon
+                  category={category}
+                  imageUrl={imageUrl}
+                  itemName={name}
+                  colorScheme={activePalette}
+                />
+              </div>
+
+              {/* URL or Upload Actions */}
+              <div className="flex-1 space-y-2 min-w-0">
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="Paste image URL (https://...)"
+                  className="w-full px-3 py-1.5 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-xs text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                />
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600 text-stone-800 dark:text-stone-200 flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>Upload Image</span>
+                  </button>
+
+                  {imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageUrl('');
+                        sounds.playPop();
+                      }}
+                      className="px-2.5 py-1 text-xs font-semibold rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      <span>Revert to Category Drawing</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <p className="text-[11px] text-stone-400 leading-tight">
+              {imageUrl
+                ? 'Custom image active. Renders with a fixed 1:1 ratio.'
+                : 'Using generic category vector drawing. You can upload a photo or paste a URL anytime.'}
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
@@ -302,8 +404,7 @@ export const CardEditModal: React.FC<CardEditModalProps> = ({
                   <button
                     type="button"
                     onClick={handleCreateCategory}
-                    disabled={!newCatInput.trim()}
-                    className="px-2 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-bold disabled:opacity-50 cursor-pointer"
+                    className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg cursor-pointer"
                   >
                     Add
                   </button>

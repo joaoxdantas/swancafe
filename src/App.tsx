@@ -506,6 +506,7 @@ export default function App() {
           cardName: card.name,
           initials: card.initials,
           category: card.category,
+          imageUrl: card.imageUrl,
           quantity: 1,
           colorScheme: groupScheme,
         },

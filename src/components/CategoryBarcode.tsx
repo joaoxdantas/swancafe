@@ -6,6 +6,7 @@ interface CategoryBarcodeProps {
   barcodeNumber: string;
   className?: string;
   showDigitsBelow?: boolean;
+  actionAfterBarcode?: React.ReactNode;
 }
 
 export const CategoryBarcode: React.FC<CategoryBarcodeProps> = ({
@@ -13,6 +14,7 @@ export const CategoryBarcode: React.FC<CategoryBarcodeProps> = ({
   barcodeNumber,
   className = '',
   showDigitsBelow = false,
+  actionAfterBarcode,
 }) => {
   const cleanNumber = (barcodeNumber || '0338447').trim() || '0338447';
   const cleanName = (categoryName || 'LUNCH').toUpperCase().trim();
@@ -27,11 +29,11 @@ export const CategoryBarcode: React.FC<CategoryBarcodeProps> = ({
       className={`bg-white text-slate-900 rounded-xl px-4 py-3 sm:px-5 sm:py-3.5 border border-slate-200/90 shadow-xs flex items-center justify-between gap-4 w-full select-none overflow-hidden transition-all hover:border-slate-300 dark:border-slate-700/80 ${className}`}
       title={`Código 128: ${cleanName} - Ref ${cleanNumber}`}
     >
-      {/* LEFT: Standard Code 128 Barcode with quiet zones and crisp pixel edges */}
-      <div className="flex-1 min-w-0 flex items-center justify-start overflow-hidden">
+      {/* LEFT: Standard Code 128 Barcode with action mounted directly adjacent on its right side */}
+      <div className="flex-1 min-w-0 flex items-center justify-start gap-3 overflow-hidden">
         <svg
           viewBox={`0 0 ${barcode.totalWidth} ${barcode.height}`}
-          className="h-10 sm:h-11 w-auto max-w-[210px] sm:max-w-[260px] block"
+          className="h-10 sm:h-11 w-auto max-w-[200px] sm:max-w-[240px] block shrink-0"
           style={{ shapeRendering: 'crispEdges', imageRendering: 'pixelated' }}
           role="img"
           aria-label={`Código de barras Code 128 para ${cleanName} (${cleanNumber})`}
@@ -56,6 +58,13 @@ export const CategoryBarcode: React.FC<CategoryBarcodeProps> = ({
             />
           ))}
         </svg>
+
+        {/* Action mounted directly adjacent to the barcode bars (e.g. eye toggle button) */}
+        {actionAfterBarcode && (
+          <div className="shrink-0 flex items-center">
+            {actionAfterBarcode}
+          </div>
+        )}
       </div>
 
       {/* RIGHT: Thin Vertical Divider + Category Name & Reference Number (Matches physical card spec) */}

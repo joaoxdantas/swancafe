@@ -12,6 +12,7 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 import { getCategoryColorScheme, getCategoryBarcode, sounds } from '../utils/helpers';
+import { CategoryItemIcon } from './CategoryItemIcon';
 
 interface CardItemViewProps {
   card: CardItem;
@@ -94,21 +95,28 @@ export const CardItemView: React.FC<CardItemViewProps> = ({
         ) : null}
       </div>
 
-      {/* Center: INITIALS with Group Text Color */}
-      <div className="my-auto py-1 z-10 flex flex-col items-center justify-center">
+      {/* Center: 1:1 Fixed-Proportion Icon on left side of initials, Centered */}
+      <div className="my-auto py-1 z-10 flex items-center justify-center gap-2 sm:gap-2.5">
+        <CategoryItemIcon
+          category={card.category}
+          imageUrl={card.imageUrl}
+          itemName={card.name}
+          colorScheme={colorScheme}
+          compact={compact}
+        />
         <div
-          className={`font-black tracking-tight ${colorScheme.text} group-hover:scale-105 transition-transform duration-200 drop-shadow-xs font-mono text-center ${
+          className={`font-black tracking-tight ${colorScheme.text} group-hover:scale-105 transition-transform duration-200 drop-shadow-xs font-mono text-center leading-none ${
             compact
               ? initials.length <= 2
-                ? 'text-2xl sm:text-3xl'
+                ? 'text-xl sm:text-2xl'
                 : initials.length <= 4
-                ? 'text-lg sm:text-xl tracking-tight'
-                : 'text-sm sm:text-base tracking-tighter'
+                ? 'text-base sm:text-lg tracking-tight'
+                : 'text-xs sm:text-sm tracking-tighter'
               : initials.length <= 2
-              ? 'text-3xl sm:text-4xl'
+              ? 'text-2xl sm:text-3xl'
               : initials.length <= 4
-              ? 'text-xl sm:text-2xl tracking-tight'
-              : 'text-base sm:text-lg tracking-tighter'
+              ? 'text-lg sm:text-xl tracking-tight'
+              : 'text-sm sm:text-base tracking-tighter'
           }`}
         >
           {initials}

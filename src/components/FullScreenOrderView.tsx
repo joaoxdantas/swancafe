@@ -3,6 +3,7 @@ import { CardItem, OrderItem, OrderItemLine } from '../types';
 import { CardGrid } from './CardGrid';
 import { BuzzerModal } from './BuzzerModal';
 import { CategoryBarcode } from './CategoryBarcode';
+import { CategoryItemIcon } from './CategoryItemIcon';
 import {
   Send,
   Plus,
@@ -174,10 +175,10 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
         </div>
       </header>
 
-      {/* Main Dual-Column Workspace: 40% Left (Items Grid) / 60% Right (Order & Barcodes) */}
+      {/* Main Dual-Column Workspace: 60% Left (Items Grid) / 40% Right (Order & Barcodes) */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Left Column: Interactive Cards Grid (40% width on desktop/kiosk) */}
-        <div className="w-full lg:w-[40%] overflow-y-auto p-4 sm:p-5 lg:border-r border-stone-200 dark:border-stone-800">
+        {/* Left Column: Interactive Cards Grid (60% width on desktop/kiosk) */}
+        <div className="w-full lg:w-[60%] overflow-y-auto p-4 sm:p-5 lg:border-r border-stone-200 dark:border-stone-800">
           <CardGrid
             cards={cards}
             categories={categories}
@@ -193,8 +194,8 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
           />
         </div>
 
-        {/* Right Column: Dedicated Live Order & Barcode Scanning Column (60% width on desktop/kiosk) */}
-        <div className="w-full lg:w-[60%] bg-white dark:bg-stone-900 flex flex-col shrink-0 border-t lg:border-t-0 border-stone-200 dark:border-stone-800 shadow-xl relative z-10 overflow-hidden">
+        {/* Right Column: Dedicated Live Order & Barcode Scanning Column (40% width on desktop/kiosk) */}
+        <div className="w-full lg:w-[40%] bg-white dark:bg-stone-900 flex flex-col shrink-0 border-t lg:border-t-0 border-stone-200 dark:border-stone-800 shadow-xl relative z-10 overflow-hidden">
           {/* Order Header */}
           <div className="p-4 sm:p-5 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between gap-3 bg-stone-50/50 dark:bg-stone-950/30">
             <div className="flex items-center gap-2.5">
@@ -273,11 +274,18 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
                             : 'bg-white dark:bg-stone-850 border-stone-300 dark:border-stone-700/80 shadow-md ring-1 ring-stone-200/50 dark:ring-stone-800'
                         }`}
                       >
-                        {/* Top Row: Item Details, Steppers, and Hide Barcode Button */}
+                        {/* Top Row: Item Details & Quantity Steppers */}
                         <div className="flex items-center justify-between gap-3 pb-3 border-b border-stone-100 dark:border-stone-800">
-                          <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <CategoryItemIcon
+                              category={item.category}
+                              imageUrl={item.imageUrl}
+                              itemName={item.cardName}
+                              compact
+                              className="w-8 h-8 rounded-lg"
+                            />
                             <span
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center font-mono font-black text-xs border shrink-0 ${item.colorScheme.border} ${item.colorScheme.bg} ${item.colorScheme.text}`}
+                              className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono font-black text-xs border shrink-0 ${item.colorScheme.border} ${item.colorScheme.bg} ${item.colorScheme.text}`}
                             >
                               {item.initials}
                             </span>
@@ -318,52 +326,60 @@ export const FullScreenOrderView: React.FC<FullScreenOrderViewProps> = ({
                                 <Plus className="w-3.5 h-3.5" />
                               </button>
                             </div>
-
-                            {/* Hide / Show Barcode Toggle Button */}
-                            <button
-                              type="button"
-                              onClick={() => toggleBarcodeVisibility(item.cardId)}
-                              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                                isHidden
-                                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
-                                  : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-300 dark:border-stone-700 hover:bg-stone-200 dark:hover:bg-stone-750'
-                              }`}
-                              title={isHidden ? 'Show barcode again' : 'Hide barcode after scanning'}
-                            >
-                              {isHidden ? (
-                                <>
-                                  <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                                  <span>Show Barcode</span>
-                                </>
-                              ) : (
-                                <>
-                                  <EyeOff className="w-3.5 h-3.5 text-stone-500" />
-                                  <span>Hide Barcode</span>
-                                </>
-                              )}
-                            </button>
                           </div>
                         </div>
 
-                        {/* Barcode Area: Hidden Banner OR High-Visibility Spaced Barcode */}
-                        {isHidden ? (
-                          <div className="mt-3 py-2.5 px-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-300 animate-in fade-in duration-100">
-                            <div className="flex items-center gap-2 font-bold">
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                              <span>Scanned · Barcode Hidden</span>
+                        {/* Barcode Row with Eye Toggle mounted directly adjacent to barcode bars */}
+                        <div className="pt-3">
+                          {isHidden ? (
+                            <div className="bg-white dark:bg-stone-850 rounded-xl px-4 py-3 sm:px-5 sm:py-3.5 border border-emerald-300/80 dark:border-emerald-800/80 shadow-xs flex items-center justify-between gap-4 w-full animate-in fade-in duration-100">
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-700 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                  <span>Scanned · Hidden</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleBarcodeVisibility(item.cardId)}
+                                  className="px-2.5 py-1 rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/60 dark:hover:bg-emerald-850 text-emerald-800 dark:text-emerald-200 flex items-center gap-1 transition-all cursor-pointer shadow-2xs active:scale-95 text-xs font-bold"
+                                  title="Show barcode again"
+                                >
+                                  <EyeOff className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-300" />
+                                  <span className="text-[10px] uppercase tracking-wider">Show</span>
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0 opacity-60">
+                                <div className="w-[1.5px] h-7 bg-slate-200 dark:bg-slate-700 shrink-0" />
+                                <div className="text-right flex flex-col justify-center min-w-[70px]">
+                                  <span className="text-xs font-black text-slate-800 dark:text-stone-300 uppercase leading-tight truncate max-w-[110px]">
+                                    {barcodeData.name}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-slate-500 dark:text-stone-400 mt-0.5">
+                                    {barcodeData.code}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <span className="text-[11px] text-emerald-700/80 dark:text-emerald-400/80">
-                              Scanner will not trigger this item
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="pt-3">
+                          ) : (
                             <CategoryBarcode
                               categoryName={barcodeData.name}
                               barcodeNumber={barcodeData.code}
+                              actionAfterBarcode={
+                                <button
+                                  type="button"
+                                  onClick={() => toggleBarcodeVisibility(item.cardId)}
+                                  className="px-2.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 hover:bg-stone-100 dark:bg-stone-800 dark:hover:bg-stone-750 text-stone-700 dark:text-stone-300 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs active:scale-95 shrink-0"
+                                  title="Hide barcode after scanning"
+                                >
+                                  <Eye className="w-4 h-4 text-stone-700 dark:text-stone-300" />
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-stone-600 dark:text-stone-400">
+                                    Hide
+                                  </span>
+                                </button>
+                              }
                             />
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     );
                   })}

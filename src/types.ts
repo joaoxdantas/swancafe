@@ -3,6 +3,7 @@ export interface CardItem {
   name: string;
   initials: string;
   category?: string;
+  imageUrl?: string;
   isActive?: boolean; // When false, hidden from dispatch tab so it can be reused later
   colorScheme: {
     bg: string;
@@ -21,6 +22,7 @@ export interface OrderItemLine {
   cardName: string;
   initials: string;
   category?: string;
+  imageUrl?: string;
   quantity: number;
   colorScheme: {
     bg: string;

@@ -1,24 +1,34 @@
-# Implementation Plan: 60/40 Full Screen Ordering Layout, Anti-Scan Spacing, Barcode Hide Controls & Phone Vibration Resolution (Completed)
+# Implementation Plan: 1:1 Item Icons & Image Upload Support (Completed)
 
-A comprehensive update to the Full Screen Ordering Kiosk layout to optimize barcode scanning ergonomics (60% right / 40% left), prevent accidental adjacent barcode scans with generous spacing and individual hide buttons, and resolve the mobile phone vibration issue across Android and iOS browsers.
+Implementing 1:1 fixed-proportion item icons positioned directly to the left of initials in the card center, category-specific vector drawings, and image URL / file upload capabilities in the Menu Edit modal without enlarging card dimensions.
 
 ---
 
 ## Implemented & Verified Changes
 
-### 1. 60/40 Full Screen Ratio (Right/Left)
-- **Re-proportioned Workspace**: Updated `FullScreenOrderView.tsx` containers so the **Right side (Order Summary & Barcodes) occupies 60%** (`w-full lg:w-[60%]`) and the **Left side (Menu Grid) occupies 40%** (`w-full lg:w-[40%]`).
-- **Scanner Ergonomics**: Provides substantial horizontal and vertical breathing room for barcode scanning guns and smartphone cameras.
+### 1. 1:1 Fixed-Proportion Item Icons Without Enlarging Cards
+- **Preserved Card Dimensions**: Maintained original card heights (`min-h-[135px]` standard, `min-h-[110px]` compact) without enlarging any cards.
+- **Horizontal Pairing in Card Center**: Positioned the 1:1 square icon container directly to the left of the item initials in a balanced, centered horizontal cluster (`[ 1:1 Icon ] [ Initials ]`).
+- **Visual Consistency in Order Summary**: Also applied the 1:1 icon directly to the left of the item initials in the Order Summary list on the right column.
 
-### 2. Accidental Scan Prevention & Barcode Hide Buttons
-- **Generous Spacing**: Applied vertical separation (`space-y-6`) and individual card padding between ordered items, preventing laser scanners from accidentally registering adjacent barcodes.
-- **Per-Barcode Hide Button**:
-  - Each item card features a prominent **"Hide Barcode"** button (`EyeOff` icon).
-  - When clicked, the barcode is unmounted and replaced with a clean **"✓ Scanned · Barcode Hidden"** badge.
-  - Operators or customers can click **"Show Barcode"** (`Eye` icon) anytime to re-expand.
-- **"Unhide All" Header Helper**: An **"Unhide All"** button automatically appears in the Order Summary header whenever any barcode is hidden, resetting all items with a single click.
+### 2. Category Vector Drawings (Generic Drawings for Each Category)
+- Crafted custom, clean vector SVG line drawings for every cafe category:
+  - **Breakfast / Egg**: Sunny-side-up egg with yolk and bread.
+  - **Lunch / Sandwich / Wrap**: Layered artisan sub/sandwich with fresh lettuce, cheese, and tomato lines.
+  - **Toast / Bread**: Sliced toasted artisan bread with melting golden butter.
+  - **MFY (Made For You)**: Chef skillet/pan with hot sizzle/steam waves.
+  - **Mini Hot / Hot Dog**: Savory sausage with mustard drizzle.
+  - **SSG Rolls**: Flaky golden pastry roll with scoring marks.
+  - **Pies / Tarts**: Aussie meat pie with fluted crust and steam vents.
+  - **Drinks / Coffee**: Takeaway cafe cup with fresh aroma steam and saucer.
+  - **Sweets / Bakery**: Decorated cupcake/muffin with cherry on top.
+  - **Default**: Cloche dining plate with fork and knife linework.
 
-### 3. Phone Vibration Deep Dive & Device Handling
-- **Android Synchronous Vibration Trigger**: Fixed Chromium's restriction on timer-based vibration by triggering `navigator.vibrate` directly within synchronous user gestures (tapping the screen, toggling Sound On, or pressing the Test button).
-- **Interactive Vibration & Sound Test Card**: Added an interactive test card on the customer buzzer screen that invokes `navigator.vibrate([400, 150, 400, 150, 600])` directly in the user click handler.
-- **Apple iOS Detection & Clear Feedback**: If the user is on an iPhone/iPad (where Apple strictly blocks the Web Vibration API in all browsers), the app displays a clear device note confirming that high-decibel audio alarms and full-screen strobing are fully active.
+### 3. Image URL & File Upload Support
+- **Custom Image Support**: `CardItem` and `OrderItemLine` now accept an optional `imageUrl?: string`.
+- **Card Edit Modal**:
+  - Image URL input field for pasting direct web images (`https://...`).
+  - Native file upload button (`<input type="file" accept="image/*">`) with instant FileReader conversion to data URL.
+  - 1:1 square thumbnail preview in the edit form.
+  - "Revert to Category Drawing" button to easily clear custom images and restore the default category drawing.
+  - Live card preview updating in real-time as an image URL or file is selected.
